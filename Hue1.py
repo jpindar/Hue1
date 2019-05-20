@@ -3,13 +3,13 @@ Project: My First Hue Demo
 File: Hue1.py
 Author: jpindar@jpindar.com
 """
-import requests
 import json
 import time
+import requests
 
 ___author___ = "jpindar@jpindar.com"
-ip_address = "10.0.1.3:80"
-username = "d6dsl1hc-Lc0bMkkiVldUVDnwheXfzExAdrddr04"
+IP_ADDRESS = "10.0.1.3:80"
+USERNAME = "d6dsl1hc-Lc0bMkkiVldUVDnwheXfzExAdrddr04"
 
 
 class HueException(Exception):
@@ -21,7 +21,7 @@ class Bridge:
         self.light_list = []
         self.url = "http://" + ip_address + "/api/" + username
 
-    def _request(self, route, data={}):
+    def _request(self, route):
         try:
             response = requests.get(url=self.url + '/' + route)
         except Exception as e:
@@ -43,7 +43,6 @@ class Bridge:
             light.data = response[str(light.index)]
 
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
-        # self.self.light_list.insert(0, Light(self, 0))  # add a dummy light so the index and the position in the list match
 
     def lights(self):
         self.get_light_data()
@@ -68,7 +67,7 @@ class Light:
         self.data = None
 
     def _request(self):
-        my_url = self.bridge.url+"/lights/"+str(self.index)
+        my_url = self.bridge.url + "/lights/" + str(self.index)
         try:
             response = requests.get(url=my_url)
         except Exception as e:
@@ -91,11 +90,7 @@ class Light:
 
     def send(self, cmd=None):
         my_url = self.bridge.url + "/lights/" + str(self.index) + "/state"
-        if cmd is None:
-            msg = json.dumps(self.data['state'])   # this isn't really the right thing to do, we're trying to write to some read-only parameters
-        else:
-            msg = json.dumps(cmd)
-
+        msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
             r = response.json()
@@ -105,11 +100,9 @@ class Light:
         return r
 
 
-
-
 def main():
     print("Hue Demo")
-    bridge = Bridge(ip_address, username)
+    bridge = Bridge(IP_ADDRESS, USERNAME)
 
     bridge.all_off()
 
@@ -135,7 +128,6 @@ def main():
     light.get_data()
     print(light.data['state'])
     # now it is accurate
-
 
     time.sleep(0.5)
     light.set("on", False)
