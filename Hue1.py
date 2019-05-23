@@ -2,6 +2,7 @@
 Project: My First Hue Demo
 File: Hue1.py
 Author: jpindar@jpindar.com
+Requires: https://pypi.org/project/requests/2.7.0/
 """
 import json
 import time
@@ -31,9 +32,9 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to parse light data")
 
-    def get_light_data(self):
+    def get_lights(self):
         try:
-            response = self._request("lights")
+            response = self._request(Light.ROUTE)
         except Exception as e:
             raise HueException("Not able to get light data")
 
@@ -45,29 +46,31 @@ class Bridge:
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
 
     def lights(self):
-        self.get_light_data()
+        self.get_lights()
         return self.light_list
 
     def get_light_by_name(self, this_name):
-        self.get_light_data()
+        self.get_lights()
         for light in self.light_list:
             if light.data['name'] == this_name:
                 return light
 
     def all_off(self):
-        self.get_light_data()
+        self.get_lights()
         for light in self.light_list:
             light.set("on", False)
 
 
 class Light:
+    ROUTE = 'lights'
+
     def __init__(self, bridge, index):
         self.index = int(index)
         self.bridge = bridge
         self.data = None
 
     def _request(self):
-        my_url = self.bridge.url + "/lights/" + str(self.index)
+        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index)
         try:
             response = requests.get(url=my_url)
         except Exception as e:
@@ -79,22 +82,19 @@ class Light:
             response = self._request()
         except Exception as e:
             raise HueException("Not able to get light data")
-        try:
-            self.data = response
-        except Exception as e:
-            raise HueException("Not able to update light data")
+        self.data = response
 
     def set(self, attr, value):
-        cmd = {attr: value}
-        self.send(cmd)
+        self.send({attr: value})
 
     def send(self, cmd=None):
-        my_url = self.bridge.url + "/lights/" + str(self.index) + "/state"
+        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
         msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
             r = response.json()
-            #  r should be a list of dicts, 1st element of 1st element == 'success'
+            #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
+            #  1st element of 1st element should be 'success'
         except Exception as e:
             raise HueException("Not able to send light data")
         return r
@@ -103,7 +103,6 @@ class Light:
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
-
     bridge.all_off()
 
     # if you know the index of a light, you can access a light like this:
