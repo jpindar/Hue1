@@ -55,10 +55,34 @@ class Bridge:
             if light.data['name'] == this_name:
                 return light
 
-    def all_off(self):
-        self.get_lights()
-        for light in self.light_list:
-            light.set("on", False)
+    def all_on(self, on):
+        group = Group(self, 0)  # group 0 is all lights
+        group.set('on', on)
+
+
+class Group:
+    ROUTE = 'groups'
+
+    def __init__(self, bridge, id):
+        self.id = id
+        self.bridge=bridge
+
+    def set(self, attr, value):
+        self.send({attr: value})
+
+    def send(self, cmd=None):
+        my_url = self.bridge.url+"/"+self.ROUTE+"/"+str(self.id)+ "/action"  # /api/<username>/groups/<id>/action
+        msg = json.dumps(cmd)
+        try:
+            response = requests.put(url=my_url, data=msg)
+            r = response.json()
+            #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
+            #  1st element of 1st element == 'success'
+        except Exception as e:
+            raise HueException("Not able to send light data")
+        if any('error' in s for s in r):
+            raise HueException("got error response")  # could just mean the light is turned off
+        return r
 
 
 class Light:
@@ -86,7 +110,7 @@ class Light:
 
     def set(self, attr, value):
         try:
-           self.send({attr: value})
+            self.send({attr: value})
         except HueException as e:  # usually means the light is turned off (logicly, not physically)
             pass
 
@@ -108,7 +132,10 @@ class Light:
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
-    bridge.all_off()
+    bridge.all_on(True)
+
+    group = Group(bridge, 0)  # group 0 is all lights
+    group.set("hue", 9000)
 
     # if you know the index of a light, you can access a light like this:
     # a_light = Light(bridge, 4)
@@ -136,7 +163,7 @@ def main():
     # now it is accurate
 
     time.sleep(0.5)
-    light.set("on", False)
+    bridge.all_on(False)
 
 if __name__ == "__main__":
     main()
