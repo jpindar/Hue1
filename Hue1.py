@@ -85,7 +85,10 @@ class Light:
         self.data = response
 
     def set(self, attr, value):
-        self.send({attr: value})
+        try:
+           self.send({attr: value})
+        except HueException as e:  # usually means the light is turned off (logicly, not physically)
+            pass
 
     def send(self, cmd=None):
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
@@ -97,6 +100,8 @@ class Light:
             #  1st element of 1st element should be 'success'
         except Exception as e:
             raise HueException("Not able to send light data")
+        if any('error' in s for s in r):
+            raise HueException("got error response")  # could just mean the light is turned off
         return r
 
 
@@ -118,6 +123,8 @@ def main():
         print(light.index, light.data['name'])
 
     light = bridge.get_light_by_name("LivingColors 1")
+    if light is None:
+        print("Couldn't find a light with that name")
 
     light.set("on", True)
     light.set("hue", 0000)
