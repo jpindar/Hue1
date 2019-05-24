@@ -65,13 +65,11 @@ class Bridge:
             scene.data = response[str(scene.id)]
         # self.scene_list = sorted(self.scene_list, key=lambda x: x.index)
 
-
     def get_scene_by_name(self, this_name):
         self.get_scenes()
         for scene in self.scene_list:
             if scene.data['name'] == this_name:
                 return scene
-
 
     def lights(self):
         self.get_lights()
@@ -96,18 +94,23 @@ class Scene:
         self.bridge = bridge
         self.data = {}
 
+    def display(self):
+        group = Group(self.bridge, 0)  # group 0 is all lights
+        group.set("scene", self.id)
+
+
 class Group:
     ROUTE = 'groups'
 
     def __init__(self, bridge, id):
         self.id = id
-        self.bridge=bridge
+        self.bridge = bridge
 
     def set(self, attr, value):
         self.send({attr: value})
 
     def send(self, cmd=None):
-        my_url = self.bridge.url+"/"+self.ROUTE+"/"+str(self.id)+ "/action"  # /api/<username>/groups/<id>/action
+        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.id) + "/action"
         msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
@@ -117,7 +120,7 @@ class Group:
         except Exception as e:
             raise HueException("Not able to send light data")
         if any('error' in s for s in r):
-            raise HueException("got error response")  # could just mean the light is turned off
+            raise HueException("got error response")
         return r
 
 
@@ -179,11 +182,12 @@ def main():
     bridge.all_on(True)
 
     group = Group(bridge, 0)  # group 0 is all lights
-    group.set("hue", 9000)
+    group.set("hue", 0)
+    group.set("sat", 255)
 
-    scene = bridge.get_scene_by_name("Relax")
-    group.set("scene", scene.id)
-
+    scene = bridge.get_scene_by_name("Energize")
+    if scene is not None:
+        scene.display()
 
     light = bridge.get_light_by_name("LivingColors 1")
     if light is None:
