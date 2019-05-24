@@ -20,6 +20,7 @@ class HueException(Exception):
 class Bridge:
     def __init__(self, ip_address, username):
         self.light_list = []
+        self.scene_list = []
         self.url = "http://" + ip_address + "/api/" + username
 
     def _request(self, route):
@@ -52,6 +53,26 @@ class Bridge:
             light.data = response[str(light.index)]
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
 
+    def get_scenes(self):
+        try:
+            response = self._request(Scene.ROUTE)
+        except Exception as e:
+            raise HueException("Not able to get scene data")
+
+        # create scenes and put them in a list
+        self.scene_list = [Scene(self, i) for i in response.keys()]
+        for scene in self.scene_list:
+            scene.data = response[str(scene.id)]
+        # self.scene_list = sorted(self.scene_list, key=lambda x: x.index)
+
+
+    def get_scene_by_name(self, this_name):
+        self.get_scenes()
+        for scene in self.scene_list:
+            if scene.data['name'] == this_name:
+                return scene
+
+
     def lights(self):
         self.get_lights()
         return self.light_list
@@ -66,6 +87,14 @@ class Bridge:
         group = Group(self, 0)  # group 0 is all lights
         group.set('on', on)
 
+
+class Scene:
+    ROUTE = 'scenes'
+
+    def __init__(self, bridge, id):
+        self.id = id
+        self.bridge = bridge
+        self.data = {}
 
 class Group:
     ROUTE = 'groups'
@@ -140,12 +169,16 @@ def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
-    bridge.get_all_data()
+    # bridge.get_all_data()
 
     bridge.all_on(True)
 
     group = Group(bridge, 0)  # group 0 is all lights
     group.set("hue", 9000)
+
+    scene = bridge.get_scene_by_name("Relax")
+
+    group.set("scene", scene.id)
 
     # Better way:
     lights = bridge.lights()
@@ -159,11 +192,11 @@ def main():
 
     # transitiontime  uint16
     # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
+    # light.set("transitiontime", 0)
 
-    light.set("transitiontime", 0)
     light.set("on", True)
     light.set("hue", 0000)
-
+    light.set("sat", 255)
     # light.set("effect", "colorloop")
     # light.set("alert","select")    # turns light on and off quickly
     # light.set("alert", "lselect")
