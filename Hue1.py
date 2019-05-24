@@ -157,8 +157,16 @@ def main():
     if light is None:
         print("Couldn't find a light with that name")
 
+    # transitiontime  uint16
+    # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
+
+    light.set("transitiontime", 0)
     light.set("on", True)
     light.set("hue", 0000)
+
+    # light.set("effect", "colorloop")
+    # light.set("alert","select")    # turns light on and off quickly
+    # light.set("alert", "lselect")
 
     print(light.data['state'])
     # now light.state is no longer accurate
