@@ -63,7 +63,7 @@ class Bridge:
         self.scene_list = [Scene(self, i) for i in response.keys()]
         for scene in self.scene_list:
             scene.data = response[str(scene.id)]
-        # self.scene_list = sorted(self.scene_list, key=lambda x: x.index)
+        self.scene_list = sorted(self.scene_list, key=lambda x: x.data['name'])
 
     def get_scene_by_name(self, this_name):
         self.get_scenes()
@@ -75,6 +75,10 @@ class Bridge:
         self.get_lights()
         return self.light_list
 
+    def scenes(self):
+        self.get_scenes()
+        return self.scene_list
+
     def get_light_by_name(self, this_name):
         self.get_lights()
         for light in self.light_list:
@@ -84,6 +88,16 @@ class Bridge:
     def all_on(self, on):
         group = Group(self, 0)  # group 0 is all lights
         group.set('on', on)
+
+    def print_scene_names(self):
+        self.get_scenes()
+        for scene in self.scene_list:
+            print(scene.data['name'])
+
+    def print_light_names(self):
+        self.get_lights()
+        for light in self.light_list:
+            print(light.index, light.data['name'])
 
 
 class Scene:
@@ -179,16 +193,14 @@ class Light:
         return r
 
 
-def print_light_names():
-    bridge = Bridge(IP_ADDRESS, USERNAME)
-    lights = bridge.lights()
-    for light in lights:
-        print(light.index, light.data['name'])
+
 
 
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
+    bridge.print_light_names()
+    bridge.print_scene_names()
 
     bridge.all_on(True)
 
@@ -198,8 +210,8 @@ def main():
 
     scene = bridge.get_scene_by_name("Energize")
     if scene is not None:
-        scene.delete()
-        # scene.display()
+        #scene.delete()
+         scene.display()
 
     light = bridge.get_light_by_name("LivingColors 1")
     if light is None:
