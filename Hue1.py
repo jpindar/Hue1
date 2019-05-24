@@ -32,17 +32,24 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to parse light data")
 
+    """ get all data from bridge """
+    def get_all_data(self):
+        try:
+            response = self._request('')
+        except Exception as e:
+            raise HueException("Not able to get data")
+        return response
+
+    """"" get a list of lights """
     def get_lights(self):
         try:
             response = self._request(Light.ROUTE)
         except Exception as e:
             raise HueException("Not able to get light data")
-
         # create lights and put them in a list
         self.light_list = [Light(self, i) for i in response.keys()]
         for light in self.light_list:
             light.data = response[str(light.index)]
-
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
 
     def lights(self):
@@ -132,16 +139,13 @@ class Light:
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
+
+    bridge.get_all_data()
+
     bridge.all_on(True)
 
     group = Group(bridge, 0)  # group 0 is all lights
     group.set("hue", 9000)
-
-    # if you know the index of a light, you can access a light like this:
-    # a_light = Light(bridge, 4)
-    # a_light.get_data()
-    # a_light.set("on", True)
-    # But the index can change, like if someone unplugged a light.
 
     # Better way:
     lights = bridge.lights()
