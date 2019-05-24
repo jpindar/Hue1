@@ -98,6 +98,17 @@ class Scene:
         group = Group(self.bridge, 0)  # group 0 is all lights
         group.set("scene", self.id)
 
+    def delete(self):
+        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.id)
+        try:
+            response = requests.delete(url=my_url)
+            r = response.json()
+        except Exception as e:
+            raise HueException("Not able to delete scene")
+        if any('error' in s for s in r):
+            raise HueException("got error response")
+        return r
+
 
 class Group:
     ROUTE = 'groups'
@@ -187,7 +198,8 @@ def main():
 
     scene = bridge.get_scene_by_name("Energize")
     if scene is not None:
-        scene.display()
+        scene.delete()
+        # scene.display()
 
     light = bridge.get_light_by_name("LivingColors 1")
     if light is None:
