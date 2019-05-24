@@ -165,11 +165,16 @@ class Light:
         return r
 
 
+def print_light_names():
+    bridge = Bridge(IP_ADDRESS, USERNAME)
+    lights = bridge.lights()
+    for light in lights:
+        print(light.index, light.data['name'])
+
+
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
-
-    # bridge.get_all_data()
 
     bridge.all_on(True)
 
@@ -177,14 +182,8 @@ def main():
     group.set("hue", 9000)
 
     scene = bridge.get_scene_by_name("Relax")
-
     group.set("scene", scene.id)
 
-    # Better way:
-    lights = bridge.lights()
-
-    for light in lights:
-        print(light.index, light.data['name'])
 
     light = bridge.get_light_by_name("LivingColors 1")
     if light is None:
