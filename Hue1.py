@@ -144,8 +144,11 @@ class Group:
             #  1st element of 1st element == 'success'
         except Exception as e:
             raise HueException("Not able to send light data")
-        if any('error' in s for s in r):
-            raise HueException("got error response")
+        for s in r:
+            if 'error' in s:
+                error_msg = s['error']['description']
+                print(error_msg)
+                raise HueException("got error response")
         return r
 
 
