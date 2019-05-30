@@ -55,7 +55,7 @@ class Bridge:
         whitelist = config['whitelist']
         return whitelist
 
-    def delete_user(self,id):
+    def delete_user(self, id):
         my_url = self.url + "/config/whitelist/" + str(id)
         try:
             response = requests.delete(url=my_url)
@@ -221,9 +221,6 @@ class Light:
         return r
 
 
-
-
-
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
@@ -241,8 +238,7 @@ def main():
 
     scene = bridge.get_scene_by_name("Energize")
     if scene is not None:
-        #scene.delete()
-         scene.display()
+        scene.display()
 
     light = bridge.get_light_by_name("LivingColors 1")
     if light is None:
