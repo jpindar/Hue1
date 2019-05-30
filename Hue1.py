@@ -10,7 +10,7 @@ import requests
 
 ___author___ = "jpindar@jpindar.com"
 IP_ADDRESS = "10.0.1.3:80"
-USERNAME = "d6dsl1hc-Lc0bMkkiVldUVDnwheXfzExAdrddr04"
+USERNAME = "vXBlVENNfyKjfF3s"
 
 
 class HueException(Exception):
@@ -22,6 +22,7 @@ class Bridge:
         self.light_list = []
         self.scene_list = []
         self.url = "http://" + ip_address + "/api/" + username
+        self.data = []
 
     def _request(self, route):
         try:
@@ -37,9 +38,33 @@ class Bridge:
     def get_all_data(self):
         try:
             response = self._request('')
+            self.data = response
         except Exception as e:
             raise HueException("Not able to get data")
         return response
+
+    def get_config(self):
+        try:
+            response = self._request('config')
+        except Exception as e:
+            raise HueException("Not able to get data")
+        return response
+
+    def get_whitelist(self):
+        config = self.get_config()
+        whitelist = config['whitelist']
+        return whitelist
+
+    def delete_user(self,id):
+        my_url = self.url + "/config/whitelist/" + str(id)
+        try:
+            response = requests.delete(url=my_url)
+            r = response.json()
+        except Exception as e:
+            raise HueException("Not able to delete user")
+        if any('error' in s for s in r):
+            raise HueException("got error response")
+        return r
 
     """"" get a list of lights """
     def get_lights(self):
@@ -202,8 +227,11 @@ class Light:
 def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
+    # bridge.get_all_data()
     bridge.print_light_names()
     bridge.print_scene_names()
+    bridge.get_whitelist()
+    # bridge.delete_user('ZGyHf1Esz85K4NCUungAeSLsEhV9YL6TjeVDJDM0')
 
     bridge.all_on(True)
 
