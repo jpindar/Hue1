@@ -5,7 +5,7 @@ Author: jpindar@jpindar.com
 Requires: https://pypi.org/project/requests/2.7.0/
 """
 import json
-import time
+import argparse
 import requests
 
 ___author___ = "jpindar@jpindar.com"
@@ -222,47 +222,21 @@ class Light:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='controls Hue lights')
+    parser.add_argument("-l", "--list", help="list lights", action="store_true")  # boolean flag
+    parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
+
+    args = parser.parse_args()
+    # print(args)
     print("Hue Demo")
+
     bridge = Bridge(IP_ADDRESS, USERNAME)
-    # bridge.get_all_data()
-    bridge.print_light_names()
-    bridge.print_scene_names()
-    bridge.get_whitelist()
-    # bridge.delete_user('ZGyHf1Esz85K4NCUungAeSLsEhV9YL6TjeVDJDM0')
 
-    bridge.all_on(True)
+    if args.list:
+        bridge.print_light_names()
 
-    group = Group(bridge, 0)  # group 0 is all lights
-    group.set("hue", 0)
-    group.set("sat", 255)
-
-    scene = bridge.get_scene_by_name("Energize")
-    if scene is not None:
-        scene.display()
-
-    light = bridge.get_light_by_name("LivingColors 1")
-    if light is None:
-        print("Couldn't find a light with that name")
-
-    # transitiontime  uint16
-    # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
-    # light.set("transitiontime", 0)
-
-    light.set("on", True)
-    light.set("hue", 0000)
-    light.set("sat", 255)
-    # light.set("effect", "colorloop")
-    # light.set("alert","select")    # turns light on and off quickly
-    # light.set("alert", "lselect")
-
-    print(light.data['state'])
-    # now light.state is no longer accurate
-    light.get_data()
-    print(light.data['state'])
-    # now it is accurate
-
-    time.sleep(0.5)
-    bridge.all_on(False)
+    if args.off:
+        bridge.all_on(False)
 
 if __name__ == "__main__":
     main()
