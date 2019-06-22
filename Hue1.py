@@ -96,6 +96,11 @@ class Bridge:
             if scene.data['name'] == this_name:
                 return scene
 
+    def get_scene_by_index(self, i):
+        self.get_scenes()
+        scene = self.scene_list[i]
+        return scene
+
     def lights(self):
         self.get_lights()
         return self.light_list
@@ -116,8 +121,10 @@ class Bridge:
 
     def print_scene_names(self):
         self.get_scenes()
+        i = 0
         for scene in self.scene_list:
-            print(scene.data['name'])
+            i += 1
+            print(i, scene.data['name'])
 
     def print_light_names(self):
         self.get_lights()
@@ -223,8 +230,10 @@ class Light:
 
 def main():
     parser = argparse.ArgumentParser(description='controls Hue lights')
-    parser.add_argument("-l", "--list", help="list lights", action="store_true")  # boolean flag
+    parser.add_argument("-l", "--lights", help="list lights", action="store_true")  # boolean flag
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
+    parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
+    parser.add_argument("-scene", "--scene", type=int, default=0, help="activate scene")
 
     args = parser.parse_args()
     # print(args)
@@ -232,11 +241,18 @@ def main():
 
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
-    if args.list:
+    if args.lights:
         bridge.print_light_names()
+
+    if args.scenes:
+        bridge.print_scene_names()
 
     if args.off:
         bridge.all_on(False)
+
+    if args.scene:
+        scene = bridge.get_scene_by_index(args.scene)
+        scene.display()
 
 if __name__ == "__main__":
     main()
