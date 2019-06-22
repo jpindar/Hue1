@@ -4,6 +4,7 @@ File: Hue1.py
 Author: jpindar@jpindar.com
 Requires: https://pypi.org/project/requests/2.7.0/
 """
+import sys
 import json
 import argparse
 import requests
@@ -234,8 +235,8 @@ def main():
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
     parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
     parser.add_argument("-scene", "--scene", type=int, default=0, help="activate scene")
-
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
     # print(args)
     print("Hue Demo")
 
