@@ -1,3 +1,4 @@
+#!python3
 """
 Project: My First Hue Demo
 File: Hue1.py
@@ -35,8 +36,8 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to parse light data")
 
-    """ get all data from bridge """
     def get_all_data(self):
+        """ get all data from bridge """
         try:
             response = self._request('')
             self.data = response
@@ -56,8 +57,8 @@ class Bridge:
         whitelist = config['whitelist']
         return whitelist
 
-    def delete_user(self, id):
-        my_url = self.url + "/config/whitelist/" + str(id)
+    def delete_user(self, userid):
+        my_url = self.url + "/config/whitelist/" + str(userid)
         try:
             response = requests.delete(url=my_url)
             r = response.json()
@@ -67,8 +68,8 @@ class Bridge:
             raise HueException("got error response")
         return r
 
-    """"" get a list of lights """
     def get_lights(self):
+        """ get a list of lights """
         try:
             response = self._request(Light.ROUTE)
         except Exception as e:
@@ -136,8 +137,8 @@ class Bridge:
 class Scene:
     ROUTE = 'scenes'
 
-    def __init__(self, bridge, id):
-        self.id = id
+    def __init__(self, bridge, userid):
+        self.id = userid
         self.bridge = bridge
         self.data = {}
 
@@ -160,8 +161,8 @@ class Scene:
 class Group:
     ROUTE = 'groups'
 
-    def __init__(self, bridge, id):
-        self.id = id
+    def __init__(self, bridge, userid):
+        self.id = userid
         self.bridge = bridge
 
     def set(self, attr, value):
