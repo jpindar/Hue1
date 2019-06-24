@@ -74,7 +74,7 @@ class Bridge:
             response = self._request(Light.ROUTE)
         except Exception as e:
             raise HueException("Not able to get light data")
-        # create lights and put them in a list
+        # index starts at 1 not 0
         self.light_list = [Light(self, i) for i in response.keys()]
         for light in self.light_list:
             light.data = response[str(light.index)]
@@ -115,6 +115,12 @@ class Bridge:
         self.get_lights()
         for light in self.light_list:
             if light.data['name'] == this_name:
+                return light
+
+    def get_light_by_index(self, this_index):
+        self.get_lights()
+        for light in self.light_list:
+            if light.index == this_index:
                 return light
 
     def all_on(self, on):
