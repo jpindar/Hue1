@@ -217,13 +217,13 @@ class Light:
 
     def set(self, attr, value):
         try:
-            self.send({attr: value})
+            msg = json.dumps({attr: value})
+            self.send(msg)
         except HueException as e:  # usually means the light is turned off (logicly, not physically)
             pass
 
-    def send(self, cmd=None):
+    def send(self, msg):
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
-        msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
             r = response.json()
