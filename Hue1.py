@@ -242,12 +242,19 @@ def main():
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
     parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
     parser.add_argument("-scene", "--scene", type=int, default=0, help="activate scene")
-    # args = parser.parse_args()
+    parser.add_argument("-light", "--light", nargs=2, type=str, help="send JSON string to one light")
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
     # print(args)
     print("Hue Demo")
 
     bridge = Bridge(IP_ADDRESS, USERNAME)
+
+    if args.light:
+        # command format is  {'parameter':value,'parameter':value}
+        # any quotes within a command line argument must be escaped
+        light = bridge.get_light_by_index(int(args.light[0]))
+        print('sending', args.light[1], 'to', light.data['name'])
+        light.send(args.light[1])
 
     if args.lights:
         bridge.print_light_names()
