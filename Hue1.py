@@ -13,6 +13,7 @@ import requests
 ___author___ = "jpindar@jpindar.com"
 IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
+# USERNAME = "vXBlVENNfyKjfF3s1"  # bad username for testing
 
 
 class HueException(Exception):
@@ -29,8 +30,10 @@ class Bridge:
     def _request(self, route):
         try:
             response = requests.get(url=self.url + '/' + route)
+            # print(response.status_code)  # should be 200
         except Exception as e:
-            raise HueException("Not able to get Hue data")
+            # print(response.status_code)
+            raise HueException(response.status_code + "Not able to get Hue data")
         try:
             return response.json()
         except Exception as e:
@@ -40,6 +43,8 @@ class Bridge:
         """ get all data from bridge """
         try:
             response = self._request('')
+            if any('error' in s for s in response):
+                raise HueException("got error response")
             self.data = response
         except Exception as e:
             raise HueException("Not able to get data")
@@ -74,23 +79,36 @@ class Bridge:
             response = self._request(Light.ROUTE)
         except Exception as e:
             raise HueException("Not able to get light data")
+        if any('error' in s for s in response):
+            raise HueException("got error response")
+
+        # print(response)
         # index starts at 1 not 0
-        self.light_list = [Light(self, i) for i in response.keys()]
-        for light in self.light_list:
-            light.data = response[str(light.index)]
-        self.light_list = sorted(self.light_list, key=lambda x: x.index)
+        try:
+            self.light_list = [Light(self, i) for i in response.keys()]
+            for light in self.light_list:
+                light.data = response[str(light.index)]
+            self.light_list = sorted(self.light_list, key=lambda x: x.index)
+        except Exception as e:
+            raise HueException("could not parse response")
+        return self.light_list
 
     def get_scenes(self):
         try:
             response = self._request(Scene.ROUTE)
         except Exception as e:
             raise HueException("Not able to get scene data")
+        if any('error' in s for s in response):
+            raise HueException("got error response")
 
         # create scenes and put them in a list
-        self.scene_list = [Scene(self, i) for i in response.keys()]
-        for scene in self.scene_list:
-            scene.data = response[str(scene.id)]
-        self.scene_list = sorted(self.scene_list, key=lambda x: x.data['name'])
+        try:
+            self.scene_list = [Scene(self, i) for i in response.keys()]
+            for scene in self.scene_list:
+                scene.data = response[str(scene.id)]
+            self.scene_list = sorted(self.scene_list, key=lambda x: x.data['name'])
+        except Exception as e:
+            raise HueException("could not parse response")
 
     def get_scene_by_name(self, this_name):
         self.get_scenes()
@@ -182,6 +200,7 @@ class Group:
             r = response.json()
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
+            #  an example of an error is b'[{"error":{"type":1,"address":"/groups","description":"unauthorized user"}}]'
         except Exception as e:
             raise HueException("Not able to send light data")
         for s in r:
@@ -232,19 +251,25 @@ class Light:
         except Exception as e:
             raise HueException("Not able to send light data")
         if any('error' in s for s in r):
+            # print(r)
             raise HueException("got error response")  # could just mean the light is turned off
         return r
 
 
 def main():
+    # region parse arguments
     parser = argparse.ArgumentParser(description='controls Hue lights')
-    parser.add_argument("-l", "--lights", help="list lights", action="store_true")  # boolean flag
+    parser.add_argument("-lights", "--lights", help="list lights", action="store_true")  # boolean flag
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
     parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
     parser.add_argument("-scene", "--scene", type=int, default=0, help="activate scene")
     parser.add_argument("-light", "--light", nargs=2, type=str, help="send JSON string to one light")
-    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
-    # print(args)
+    # NORMAL PARSING
+    # args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+    # INJECTING ARGS FOR TESTING
+    args = parser.parse_args(["--lights"])
+    # args=parser.parse_args(["--light", "4", '{"on": true, "bri":100}'])
+    # endregion
     print("Hue Demo")
 
     bridge = Bridge(IP_ADDRESS, USERNAME)
