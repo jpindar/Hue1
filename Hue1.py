@@ -227,7 +227,7 @@ def main():
     # bridge.get_all_data()
     bridge.print_light_names()
     bridge.print_scene_names()
-    bridge.get_whitelist()
+    # bridge.get_whitelist()
     # bridge.delete_user('ZGyHf1Esz85K4NCUungAeSLsEhV9YL6TjeVDJDM0')
 
     bridge.all_on(True)
