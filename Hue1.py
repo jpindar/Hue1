@@ -4,13 +4,23 @@ File: Hue1.py
 Author: jpindar@jpindar.com
 Requires: https://pypi.org/project/requests/2.7.0/
 """
+import logging
 import json
 import time
 import requests
 
 ___author___ = "jpindar@jpindar.com"
+log_filename = 'Hue1.log'
+
 IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
+
+# IP_ADDRESS = "75.67.104.223:4200"
+# USERNAME = "d6dsl1hc-Lc0bMkkiVldUVDnwheXfzExAdrddr04"
+
+logger = logging.getLogger(__name__)
+if __name__ == "__main__":
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s', level=logging.INFO)
 
 
 class HueException(Exception):
