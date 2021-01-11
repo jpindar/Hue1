@@ -40,7 +40,7 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to get Hue data")
         try:
-            return response.json()
+            return response.json() # response is of type response, but we're only returning the json (which is a dict)
         except Exception as e:
             raise HueException("Not able to parse light data")
 
@@ -206,9 +206,9 @@ class Light:
     def get_data(self):
         try:
             response = self._request()
+            self.data = response
         except Exception as e:
             raise HueException("Not able to get light data")
-        self.data = response
 
     def set(self, attr, value):
         try:
@@ -225,6 +225,7 @@ class Light:
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element should be 'success'
         except Exception as e:
+            logger.warning(e.args)
             raise HueException("Not able to send light data")
         if any('error' in s for s in r):
             raise HueException("got error response")  # could just mean the light is turned off
@@ -236,7 +237,8 @@ def main():
     bridge = Bridge(IP_ADDRESS, USERNAME)
     # bridge.get_all_data()
     bridge.print_light_names()
-    bridge.print_scene_names()
+    # bridge.print_scene_names()
+
     # bridge.get_whitelist()
     # bridge.delete_user('ZGyHf1Esz85K4NCUungAeSLsEhV9YL6TjeVDJDM0')
 
@@ -251,6 +253,10 @@ def main():
         scene.display()
 
     light = bridge.get_light_by_name("LivingColors 1")
+    if light is None:
+        print("Couldn't find a light with that name")
+
+    light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
 
@@ -273,6 +279,7 @@ def main():
 
     time.sleep(0.5)
     bridge.all_on(False)
+
 
 if __name__ == "__main__":
     main()
