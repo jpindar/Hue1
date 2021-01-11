@@ -117,7 +117,7 @@ class Bridge:
     def get_light_by_name(self, this_name):
         self.get_lights()
         for light in self.light_list:
-            if light.data['name'] == this_name:
+            if light.name == this_name:
                 return light
 
     def all_on(self, on):
@@ -194,6 +194,7 @@ class Light:
         self.index = int(index)
         self.bridge = bridge
         self.data = None
+        self.name = None
         self.state = None
 
     def _request(self):
@@ -208,6 +209,7 @@ class Light:
         try:
             response = self._request()
             self.data = response
+            self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
             raise HueException("Not able to get light data")
@@ -215,6 +217,7 @@ class Light:
     def populate(self, dict_data):
         try:
             self.data = dict_data
+            self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
             raise HueException("Not able to update light data")
