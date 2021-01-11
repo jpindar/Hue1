@@ -85,7 +85,7 @@ class Bridge:
         # create lights and put them in a list
         self.light_list = [Light(self, i) for i in response.keys()]
         for light in self.light_list:
-            light.data = response[str(light.index)]
+            light.populate(response[str(light.index)])
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
 
     def get_scenes(self):
@@ -194,6 +194,7 @@ class Light:
         self.index = int(index)
         self.bridge = bridge
         self.data = None
+        self.state = None
 
     def _request(self):
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index)
@@ -207,8 +208,16 @@ class Light:
         try:
             response = self._request()
             self.data = response
+            self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
             raise HueException("Not able to get light data")
+
+    def populate(self, dict_data):
+        try:
+            self.data = dict_data
+            self.state = self.data['state']  # creates a reference, not a copy
+        except Exception as e:
+            raise HueException("Not able to update light data")
 
     def set(self, attr, value):
         try:
