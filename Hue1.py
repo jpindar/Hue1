@@ -131,6 +131,11 @@ class Bridge:
         group = Group(self, 0)  # group 0 is all lights
         group.set('on', on)
 
+    def set_all(self, attr, value):
+        self.get_lights()
+        for light in self.light_list:
+            light.set(attr, value)
+
     def print_scene_names(self):
         self.get_scenes()
         for scene in self.scene_list:
@@ -261,7 +266,7 @@ def main():
 
     lights = bridge.lights()
     for light in lights:  # this won't work if lights is a dict
-        print(light.name)
+        print(light.index, light.name)
 
     # bridge.get_all_data()
     # bridge.print_light_names()
@@ -279,8 +284,6 @@ def main():
     # scene = bridge.get_scene_by_name("Energize")
     # if scene is not None:
     #    scene.display()
-
-
 
     # light = bridge.get_light_by_name("LivingColors 1")
     # if light is None:
