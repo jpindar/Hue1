@@ -38,16 +38,23 @@ class Bridge:
         try:
             response = requests.get(url=self.url + '/' + route)
         except Exception as e:
-            raise HueException("Not able to get Hue data")
+            raise HueException("Not able to get data")
         try:
             return response.json() # response is of type response, but we're only returning the json (which is a dict)
         except Exception as e:
-            raise HueException("Not able to parse light data")
+            raise HueException("Not able to parse data")
+
+    def check_for_error(self, result):
+        for s in result:
+            if 'error' in s:
+                s = (s['error']['description'])
+                raise HueException("error: " +s)
 
     """ get all data from bridge """
     def get_all_data(self):
         try:
             response = self._request('')
+            self.check_for_error(response)
             self.data = response
         except Exception as e:
             raise HueException("Not able to get data")
@@ -56,6 +63,7 @@ class Bridge:
     def get_config(self):
         try:
             response = self._request('config')
+            self.check_for_error(response)
         except Exception as e:
             raise HueException("Not able to get data")
         return response
@@ -69,17 +77,15 @@ class Bridge:
         my_url = self.url + "/config/whitelist/" + str(id)
         try:
             response = requests.delete(url=my_url)
-            r = response.json()
+            self.check_for_error(response)
         except Exception as e:
             raise HueException("Not able to delete user")
-        if any('error' in s for s in r):
-            raise HueException("got error response")
-        return r
 
     """ get a list of lights """
     def get_lights(self):
         try:
             response = self._request(Light.ROUTE)
+            self.check_for_error(response)
         except Exception as e:
             raise HueException("Not able to get light data")
         # create lights and put them in a list
@@ -91,6 +97,7 @@ class Bridge:
     def get_scenes(self):
         try:
             response = self._request(Scene.ROUTE)
+            self.check_for_error(response)
         except Exception as e:
             raise HueException("Not able to get scene data")
 
@@ -310,7 +317,7 @@ def main():
     time.sleep(0.5)
     bridge.all_on(False)
 
-    # can access like so 
+    # can access like so
     # lights = bridge.lights()
     # light = lights[1]
     # or we could access a light without calling bridge.lights, like this:
@@ -321,10 +328,10 @@ def main():
     # I can't think of a good use case for this, though, unless you had a huge number of lights
     # if you know the index of a light, you can access a light like this:
     # But remember, the index can change, like if someone unplugged a light.
- 
- 
- 
- 
+
+
+
+
 if __name__ == "__main__":
     main()
 
