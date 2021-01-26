@@ -253,16 +253,16 @@ class Light:
 
 
 def test_group_commands(bridge):
-    # group = Group(bridge, 0)  # group 0 is all lights
-    # group.set("hue", 0)
-    # group.set("sat", 255)
+    group = Group(bridge, 0)  # group 0 is all lights
+    group.set("hue", 0)
+    group.set("sat", 255)
 
 
 def test_scene_commands(bridge):
     # scene = bridge.get_scene_by_name("Energize")
     # if scene is not None:
     #    scene.display()
-
+    pass
 
 def test_light_commands(bridge):
     # light = bridge.get_light_by_name("LivingColors 1")
@@ -321,6 +321,7 @@ def main():
 
     bridge.all_on(True)
 
+    test_group_commands(bridge)
 
 
 
