@@ -106,12 +106,13 @@ class Bridge:
         self.scene_list = [Scene(self, i) for i in response.keys()]
         for scene in self.scene_list:
             scene.data = response[str(scene.id)]
-        self.scene_list = sorted(self.scene_list, key=lambda x: x.data['name'])
+            scene.name = scene.data['name']
+        self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
 
     def get_scene_by_name(self, this_name):
         self.get_scenes()
         for scene in self.scene_list:
-            if scene.data['name'] == this_name:
+            if scene.name == this_name:
                 return scene
 
     def lights(self):
@@ -145,6 +146,7 @@ class Scene:
         self.id = id
         self.bridge = bridge
         self.data = {}
+        self.name = ""
 
     def display(self):
         group = Group(self.bridge, 0)  # group 0 is all lights
@@ -259,10 +261,13 @@ def test_group_commands(bridge):
 
 
 def test_scene_commands(bridge):
-    # scene = bridge.get_scene_by_name("Energize")
-    # if scene is not None:
-    #    scene.display()
-    pass
+    bridge.get_scenes()
+    for scene in bridge.scene_list:
+        print(scene.name)
+
+    scene = bridge.get_scene_by_name("Energize")
+    if scene is not None:
+       scene.display()
 
 def test_light_commands(bridge):
     # light = bridge.get_light_by_name("LivingColors 1")
@@ -323,6 +328,7 @@ def main():
 
     test_group_commands(bridge)
 
+    test_scene_commands(bridge)
 
 
 
