@@ -69,6 +69,7 @@ class Bridge:
         return response
 
     def get_whitelist(self):
+        """ get bridge's whitelist of usernames """
         config = self.get_config()
         whitelist = config['whitelist']
         return whitelist
@@ -136,16 +137,6 @@ class Bridge:
         for light in self.light_list:
             light.set(attr, value)
 
-    def print_scene_names(self):
-        self.get_scenes()
-        for scene in self.scene_list:
-            print(scene.data['name'])
-
-    def print_light_names(self):
-        self.get_lights()
-        for light in self.light_list:
-            print(light.index, light.data['name'])
-
 
 class Scene:
     ROUTE = 'scenes'
@@ -172,6 +163,7 @@ class Scene:
 
 
 class Group:
+    """  Group 0 is all lights """
     ROUTE = 'groups'
 
     def __init__(self, bridge, id):
@@ -260,35 +252,22 @@ class Light:
         return r
 
 
-def main():
-    print("Hue Demo")
-    bridge = Bridge(IP_ADDRESS, USERNAME)
-
-    lights = bridge.lights()
-    for light in lights:  # this won't work if lights is a dict
-        print(light.index, light.name)
-
-    # bridge.get_all_data()
-    # bridge.print_light_names()
-    # bridge.print_scene_names()
-
-    # bridge.get_whitelist()
-    # bridge.delete_user('ZGyHf1Esz85K4NCUungAeSLsEhV9YL6TjeVDJDM0')
-
-    # bridge.all_on(True)
-
+def test_group_commands(bridge):
     # group = Group(bridge, 0)  # group 0 is all lights
     # group.set("hue", 0)
     # group.set("sat", 255)
 
+
+def test_scene_commands(bridge):
     # scene = bridge.get_scene_by_name("Energize")
     # if scene is not None:
     #    scene.display()
 
+
+def test_light_commands(bridge):
     # light = bridge.get_light_by_name("LivingColors 1")
     # if light is None:
     #     print("Couldn't find a light with that name")
-
     light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
@@ -297,8 +276,6 @@ def main():
     # light.state['on'] = True
     # light.state['hue'] = 0
     # light.send()
-
-
 
     # transitiontime  uint16
     # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
@@ -331,6 +308,19 @@ def main():
     # I can't think of a good use case for this, though, unless you had a huge number of lights
     # if you know the index of a light, you can access a light like this:
     # But remember, the index can change, like if someone unplugged a light.
+
+
+
+def main():
+    print("Hue Demo")
+    bridge = Bridge(IP_ADDRESS, USERNAME)
+
+    lights = bridge.lights()
+    for light in lights:  # this won't work if lights is a dict
+        print(light.index, light.name)
+
+    bridge.all_on(True)
+
 
 
 
