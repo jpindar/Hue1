@@ -107,13 +107,29 @@ class Bridge:
         for scene in self.scene_list:
             scene.data = response[str(scene.id)]
             scene.name = scene.data['name']
+            scene.lights = scene.data['lights']
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
 
-    def get_scene_by_name(self, this_name):
+    def get_scene_by_name(self, desired_name):
         self.get_scenes()
         for scene in self.scene_list:
-            if scene.name == this_name:
+            if scene.name == desired_name:
                 return scene
+
+    def get_scene_by_id(self, desired_id):
+        self.get_scenes()
+        for scene in self.scene_list:
+            if scene.id == desired_id:
+                return scene
+
+    def delete_scene(self, scene):
+        the_url = self.url + "/" + Scene.ROUTE + "/" + str(scene.id)
+        try:
+            response = requests.delete(url=the_url)
+            r = response.json()
+            self.check_for_error(r)
+        except Exception as e:
+            raise HueException("Not able to delete scene")
 
     def lights(self):
         self.get_lights()
@@ -153,15 +169,8 @@ class Scene:
         group.set("scene", self.id)
 
     def delete(self):
-        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.id)
-        try:
-            response = requests.delete(url=my_url)
-            r = response.json()
-        except Exception as e:
-            raise HueException("Not able to delete scene")
-        if any('error' in s for s in r):
-            raise HueException("got error response")
-        return r
+        self.bridge.delete_scene(self)
+        # delete this object now?
 
 
 class Group:
@@ -261,13 +270,23 @@ def test_group_commands(bridge):
 
 
 def test_scene_commands(bridge):
-    bridge.get_scenes()
-    for scene in bridge.scene_list:
-        print(scene.name)
+    # bridge.get_scenes()
+    # for scene in bridge.scene_list:
+    #    print(scene.name)
+    """ or is this better? """
+    scenes = bridge.scenes()
+    for scene in scenes:
+            print(scene.name + ' ' + str(scene.lights) + ' ' + scene.id)
 
-    scene = bridge.get_scene_by_name("Energize")
+    # scene = bridge.get_scene_by_name("Energize")
+    # but there can be multiple sceneS with the same name
+    scene = bridge.get_scene_by_id("ac637e2f0-on-0")
     if scene is not None:
        scene.display()
+
+    # could do this either way?
+    # bridge.delete_scene(scene)
+    scene.delete()  # this could call bridge.delete_scene()
 
 def test_light_commands(bridge):
     # light = bridge.get_light_by_name("LivingColors 1")
@@ -326,7 +345,7 @@ def main():
 
     bridge.all_on(True)
 
-    test_group_commands(bridge)
+    # test_group_commands(bridge)
 
     test_scene_commands(bridge)
 
