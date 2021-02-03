@@ -15,8 +15,6 @@ log_filename = 'Hue1.log'
 IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 
-# IP_ADDRESS = "75.67.104.223:4200"
-# USERNAME = "d6dsl1hc-Lc0bMkkiVldUVDnwheXfzExAdrddr04"
 
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
@@ -28,6 +26,7 @@ class HueException(Exception):
 
 
 class Bridge:
+
     def __init__(self, ip_address, username):
         self.light_list = []
         self.scene_list = []
@@ -50,8 +49,8 @@ class Bridge:
                 s = (s['error']['description'])
                 raise HueException("error: " +s)
 
-    """ get all data from bridge """
     def get_all_data(self):
+        """ Get all data from the bridge. """
         try:
             response = self._request('')
             self.check_for_error(response)
@@ -69,7 +68,7 @@ class Bridge:
         return response
 
     def get_whitelist(self):
-        """ get bridge's whitelist of usernames """
+        """ Get the bridge's whitelist of usernames """
         config = self.get_config()
         whitelist = config['whitelist']
         return whitelist
@@ -82,8 +81,10 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to delete user")
 
-    """ get a list of lights """
     def get_lights(self):
+        """ Get a list of the bridge's lights.
+            Note that light ids start at 1 but list positions start at 0
+        """
         try:
             response = self._request(Light.ROUTE)
             self.check_for_error(response)
@@ -150,6 +151,10 @@ class Bridge:
         group.set('on', on)
 
     def set_all(self, attr, value):
+        """ Set all lights
+
+            Since you can use group 0 for all lights, this is just an example.
+        """
         self.get_lights()
         for light in self.light_list:
             light.set(attr, value)
@@ -174,7 +179,10 @@ class Scene:
 
 
 class Group:
-    """  Group 0 is all lights """
+    """ A group of lights
+        Note that Group 0 is all lights
+    """
+
     ROUTE = 'groups'
 
     def __init__(self, bridge, id):
@@ -280,7 +288,7 @@ def test_scene_commands(bridge):
 
     # scene = bridge.get_scene_by_name("Energize")
     # but there can be multiple sceneS with the same name
-    scene = bridge.get_scene_by_id("ac637e2f0-on-0")
+    scene = bridge.get_scene_by_id("42")
     if scene is not None:
        scene.display()
 
@@ -347,7 +355,7 @@ def main():
 
     # test_group_commands(bridge)
 
-    test_scene_commands(bridge)
+    # test_scene_commands(bridge)
 
 
 
