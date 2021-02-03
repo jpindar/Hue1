@@ -3,7 +3,11 @@ Project: My First Hue Demo
 File: Hue1.py
 Author: jpindar@jpindar.com
 Requires: https://pypi.org/project/requests/2.7.0/
+
+Hue API documentation is here:
+https://developers.meethue.com/develop/hue-api/
 """
+
 import logging
 import json
 import time
@@ -27,8 +31,9 @@ class HueException(Exception):
 def check_response_for_error(result):
     for s in result:
         if 'error' in s:
-            msg = (s['error']['description'])
-            raise HueException("error: " + msg)
+            type = s['error']['type']
+            description = (s['error']['description'])
+            raise HueException("error type " + str(type) + ": " + description)
 
 
 class Bridge:
@@ -202,11 +207,7 @@ class Group:
             #  1st element of 1st element == 'success'
         except Exception as e:
             raise HueException("Not able to send light data")
-        for s in r:
-            if 'error' in s:
-                error_msg = s['error']['description']
-                print(error_msg)
-                raise HueException("got error response")
+        check_response_for_error(r)
         return r
 
 
@@ -248,8 +249,10 @@ class Light:
     def set(self, attr, value):
         try:
             self.send({attr: value})
-        except HueException as e:  # usually means the light is turned off (logicly, not physically)
-            pass
+        except HueException as e:
+            # this usually means the light is turned off  (logically or physically)
+            # TODO detect this case
+            raise e
 
     def send(self, cmd=None):
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
@@ -266,8 +269,7 @@ class Light:
         except Exception as e:
             logger.warning(e.args)
             raise HueException("Not able to send light data")
-        if any('error' in s for s in r):
-            raise HueException("got error response")  # could just mean the light is turned off
+        check_response_for_error(r)
         return r
 
 
@@ -357,7 +359,9 @@ def main():
 
     # test_scene_commands(bridge)
 
+    bridge.set_all("hue", 000)
 
+    bridge.set_all("hue", "000")  # this should cause an error response
 
 if __name__ == "__main__":
     main()
