@@ -24,6 +24,12 @@ if __name__ == "__main__":
 class HueException(Exception):
     pass
 
+def check_response_for_error(result):
+    for s in result:
+        if 'error' in s:
+            msg = (s['error']['description'])
+            raise HueException("error: " + msg)
+
 
 class Bridge:
 
@@ -43,17 +49,11 @@ class Bridge:
         except Exception as e:
             raise HueException("Not able to parse data")
 
-    def check_for_error(self, result):
-        for s in result:
-            if 'error' in s:
-                s = (s['error']['description'])
-                raise HueException("error: " +s)
-
     def get_all_data(self):
         """ Get all data from the bridge. """
         try:
             response = self._request('')
-            self.check_for_error(response)
+            check_response_for_error(response)
             self.data = response
         except Exception as e:
             raise HueException("Not able to get data")
@@ -62,7 +62,7 @@ class Bridge:
     def get_config(self):
         try:
             response = self._request('config')
-            self.check_for_error(response)
+            check_response_for_error(response)
         except Exception as e:
             raise HueException("Not able to get data")
         return response
@@ -77,7 +77,7 @@ class Bridge:
         my_url = self.url + "/config/whitelist/" + str(id)
         try:
             response = requests.delete(url=my_url)
-            self.check_for_error(response)
+            check_response_for_error(response)
         except Exception as e:
             raise HueException("Not able to delete user")
 
@@ -87,7 +87,7 @@ class Bridge:
         """
         try:
             response = self._request(Light.ROUTE)
-            self.check_for_error(response)
+            check_response_for_error(response)
         except Exception as e:
             raise HueException("Not able to get light data")
         # create lights and put them in a list
@@ -99,7 +99,7 @@ class Bridge:
     def get_scenes(self):
         try:
             response = self._request(Scene.ROUTE)
-            self.check_for_error(response)
+            check_response_for_error(response)
         except Exception as e:
             raise HueException("Not able to get scene data")
 
@@ -128,7 +128,7 @@ class Bridge:
         try:
             response = requests.delete(url=the_url)
             r = response.json()
-            self.check_for_error(r)
+            check_response_for_error(r)
         except Exception as e:
             raise HueException("Not able to delete scene")
 
