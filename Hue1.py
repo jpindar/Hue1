@@ -24,9 +24,10 @@ log_filename = 'Hue1.log'
 
 # It's OK to leave the credentials here for now
 # because my bridge is not accessible from outside my LAN
+BAD_IP_ADDRESS = "10.0.1.99:80"
 IP_ADDRESS = "10.0.1.3:80"
-# USERNAME = "vXBlVENNfyKjfF3s"
-USERNAME = "invalid_username"
+USERNAME = "vXBlVENNfyKjfF3s"
+BAD_USERNAME = "invalid_username"
 
 
 LIGHT_IS_TURNED_OFF = 201
@@ -367,6 +368,24 @@ def test_light_commands(bridge):
     # if you know the index of a light, you can access a light like this:
     # But remember, the index can change, like if someone unplugged a light.
 
+def test_bad_commands():
+
+    bridge = Bridge(IP_ADDRESS, USERNAME)
+    try:
+        bridge.set_all("hue", "000")  # this should cause an error response from the bridge
+    except HueError:
+       pass
+
+    bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
+    try:
+       lights = bridge.lights()
+    except HueError:
+       pass
+
+
+    bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
+    lights = bridge.lights()
+
 
 
 def main():
@@ -378,20 +397,23 @@ def main():
         print(light.index, light.name)
 
     bridge.all_on(True)
-    bridge.set_all("sat", 254)
+    bridge.set_all("sat", 0)
     bridge.set_all("hue", 000)
 
     # test_group_commands(bridge)
 
     # test_scene_commands(bridge)
 
-    lights[2].set('on', False)
+    test_bad_commands()
+
+
+    # lights[2].set('on', False)
 
     bridge.set_all("hue", 40000)
 
 
 
-    bridge.set_all("hue", "000")  # this should cause an error response
+
 
 if __name__ == "__main__":
     main()
