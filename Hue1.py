@@ -6,6 +6,12 @@ Requires: https://pypi.org/project/requests/2.7.0/
 
 Hue API documentation is here:
 https://developers.meethue.com/develop/hue-api/
+
+some error types
+201 device (light) is turned off (logically)
+7   invalid value
+1 unauthorized user
+
 """
 
 import logging
@@ -16,24 +22,39 @@ import requests
 ___author___ = "jpindar@jpindar.com"
 log_filename = 'Hue1.log'
 
+# It's OK to leave the credentials here for now
+# because my bridge is not accessible from outside my LAN
 IP_ADDRESS = "10.0.1.3:80"
-USERNAME = "vXBlVENNfyKjfF3s"
+# USERNAME = "vXBlVENNfyKjfF3s"
+USERNAME = "invalid_username"
+
+
+LIGHT_IS_TURNED_OFF = 201
 
 
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s', level=logging.INFO)
 
+class HueError(Exception):
+    """Exception raised for errors in the response from the bridge
 
-class HueException(Exception):
-    pass
+    Attributes:
+        type -- numeric type of error
+        description -- explanation of the error
+    """
+
+    def __init__(self, type, description):
+        self.type = type
+        self.description = description
+
 
 def check_response_for_error(result):
     for s in result:
         if 'error' in s:
             type = s['error']['type']
             description = (s['error']['description'])
-            raise HueException("error type " + str(type) + ": " + description)
+            raise HueError(type, "error: " + description)
 
 
 class Bridge:
@@ -47,12 +68,10 @@ class Bridge:
     def _request(self, route):
         try:
             response = requests.get(url=self.url + '/' + route)
-        except Exception as e:
-            raise HueException("Not able to get data")
-        try:
             return response.json() # response is of type response, but we're only returning the json (which is a dict)
         except Exception as e:
-            raise HueException("Not able to parse data")
+            # TODO put some logging here
+            raise e
 
     def get_all_data(self):
         """ Get all data from the bridge. """
@@ -61,7 +80,7 @@ class Bridge:
             check_response_for_error(response)
             self.data = response
         except Exception as e:
-            raise HueException("Not able to get data")
+            raise HueError(0, "Not able to get data")
         return response
 
     def get_config(self):
@@ -69,7 +88,7 @@ class Bridge:
             response = self._request('config')
             check_response_for_error(response)
         except Exception as e:
-            raise HueException("Not able to get data")
+            raise HueError(0, "Not able to get data")
         return response
 
     def get_whitelist(self):
@@ -84,7 +103,7 @@ class Bridge:
             response = requests.delete(url=my_url)
             check_response_for_error(response)
         except Exception as e:
-            raise HueException("Not able to delete user")
+            raise HueError(0, "Not able to delete user")
 
     def get_lights(self):
         """ Get a list of the bridge's lights.
@@ -93,8 +112,10 @@ class Bridge:
         try:
             response = self._request(Light.ROUTE)
             check_response_for_error(response)
+        except HueError as e:
+            raise e
         except Exception as e:
-            raise HueException("Not able to get light data")
+            raise e
         # create lights and put them in a list
         self.light_list = [Light(self, i) for i in response.keys()]
         for light in self.light_list:
@@ -106,7 +127,7 @@ class Bridge:
             response = self._request(Scene.ROUTE)
             check_response_for_error(response)
         except Exception as e:
-            raise HueException("Not able to get scene data")
+            raise HueError(0, "Not able to get scene data")
 
         # create scenes and put them in a list
         self.scene_list = [Scene(self, i) for i in response.keys()]
@@ -135,7 +156,7 @@ class Bridge:
             r = response.json()
             check_response_for_error(r)
         except Exception as e:
-            raise HueException("Not able to delete scene")
+            raise HueError(0, "Not able to delete scene")
 
     def lights(self):
         self.get_lights()
@@ -206,7 +227,7 @@ class Group:
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
         except Exception as e:
-            raise HueException("Not able to send light data")
+            raise HueError(0, "Not able to send light data")
         check_response_for_error(r)
         return r
 
@@ -226,7 +247,7 @@ class Light:
         try:
             response = requests.get(url=my_url)
         except Exception as e:
-            raise HueException("Not able to get light data")
+            raise HueError("Not able to get light data")
         return response.json()
 
     def get_data(self):
@@ -236,7 +257,7 @@ class Light:
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
-            raise HueException("Not able to get light data")
+            raise HueError(0, "Not able to get light data")
 
     def populate(self, dict_data):
         try:
@@ -244,15 +265,18 @@ class Light:
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
-            raise HueException("Not able to update light data")
+            raise HueError(0, "Not able to update light data")
 
     def set(self, attr, value):
         try:
             self.send({attr: value})
-        except HueException as e:
-            # this usually means the light is turned off  (logically or physically)
-            # TODO detect this case
-            raise e
+        except HueError as e:
+            print("Hue Error type " + str(e.type))
+            print(e.description)
+            if e.type == LIGHT_IS_TURNED_OFF:
+                pass
+            else:
+                raise e
 
     def send(self, cmd=None):
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
@@ -268,7 +292,7 @@ class Light:
             #  1st element of 1st element should be 'success'
         except Exception as e:
             logger.warning(e.args)
-            raise HueException("Not able to send light data")
+            raise HueError(0, "Not able to send light data")
         check_response_for_error(r)
         return r
 
@@ -354,12 +378,18 @@ def main():
         print(light.index, light.name)
 
     bridge.all_on(True)
+    bridge.set_all("sat", 254)
+    bridge.set_all("hue", 000)
 
     # test_group_commands(bridge)
 
     # test_scene_commands(bridge)
 
-    bridge.set_all("hue", 000)
+    lights[2].set('on', False)
+
+    bridge.set_all("hue", 40000)
+
+
 
     bridge.set_all("hue", "000")  # this should cause an error response
 
