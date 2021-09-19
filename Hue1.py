@@ -74,6 +74,12 @@ class Bridge:
         try:
             response = requests.get(url=self.url + '/' + route)
             return response.json() # response is of type response, but we're only returning the json (which is a dict)
+        except ConnectionError as e: # doesn't happen?
+            logger.error(e.args)
+            raise e
+        except requests.exceptions.ConnectionError as e: # this happens when no response
+            logger.error(e.args)
+            raise e
         except Exception as e:
             logger.error(e.args)
             raise e
@@ -120,8 +126,8 @@ class Bridge:
         except HueError as e:
             logger.error("Hue Error " + str(e.args))
             raise e
-        except Exception as e:
-            raise e
+        # except Exception as e:
+        #     raise e
         # create lights and put them in a list
         self.light_list = [Light(self, i) for i in response.keys()]
         for light in self.light_list:
@@ -278,8 +284,7 @@ class Light:
         try:
             self.send({attr: value})
         except HueError as e:
-            print("Hue Error type " + str(e.type))
-            print(e.description)
+            # print("Hue Error type " + str(e.type) + " " + e.description)
             if e.type == LIGHT_IS_TURNED_OFF:
                 pass
             else:
@@ -375,22 +380,26 @@ def test_light_commands(bridge):
     # But remember, the index can change, like if someone unplugged a light.
 
 def test_bad_commands():
-
     bridge = Bridge(IP_ADDRESS, USERNAME)
     try:
         bridge.set_all("hue", "000")  # this should cause an error response from the bridge
-    except HueError:
-       pass
+    except HueError as e:
+       print("Hue Error type " + str(e.type) + " " + e.description)
 
     bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
     try:
        lights = bridge.lights()
-    except HueError:
-       pass
-
+    except HueError as e:
+       print("Hue Error type " + str(e.type) + " " + e.description)
 
     bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
-    lights = bridge.lights()
+    try:
+       lights = bridge.lights()
+    except HueError as e:
+       print("Hue Error type " + str(e.type) + e.description)
+    except requests.exceptions.ConnectionError as e:
+      logger.error(e.args)
+      print(e.args)
 
 
 
