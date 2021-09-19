@@ -29,7 +29,7 @@ IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
-
+# If a light is physically on and off, you can turn it virtually on and off. But you can't set it's hue etc.
 LIGHT_IS_TURNED_OFF = 201
 ENABLE_LOGGING = True
 
@@ -302,6 +302,7 @@ class Light:
             r = response.json()
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element should be 'success'
+            # it will be 'success' if the light is physically turned off
         except Exception as e:
             logger.warning(e.args)
             raise HueError(0, "Not able to send light data")
@@ -401,6 +402,21 @@ def test_bad_commands():
       logger.error(e.args)
       print(e.args)
 
+def test_light_thats_off():
+    """
+    if a light is turned off, either physically or virtually, you can set it virtually on or off,
+    but trying to set its hue etc. returns an error in the response
+    """
+    bridge = Bridge(IP_ADDRESS, USERNAME)
+    light = bridge.get_light_by_name("U")
+    if light is None:
+        print("Couldn't find a light with that name")
+        return
+    light.set("on",False)
+    light.set("on",True)
+    light.set("on",False)
+    light.set("hue", 0000)
+    light.set("hue", 400)
 
 
 def main():
@@ -411,9 +427,11 @@ def main():
     for light in lights:  # this won't work if lights is a dict
         print(light.index, light.name)
 
-    bridge.all_on(True)
-    bridge.set_all("sat", 0)
-    bridge.set_all("hue", 000)
+    # bridge.all_on(True)
+    # bridge.set_all("sat", 0)
+    # bridge.set_all("hue", 000)
+
+    test_light_thats_off()
 
     # test_group_commands(bridge)
 
@@ -425,9 +443,6 @@ def main():
     # lights[2].set('on', False)
 
     bridge.set_all("hue", 40000)
-
-
-
 
 
 if __name__ == "__main__":
