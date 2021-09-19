@@ -31,11 +31,15 @@ BAD_USERNAME = "invalid_username"
 
 
 LIGHT_IS_TURNED_OFF = 201
-
+ENABLE_LOGGING = True
 
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
-    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+if ENABLE_LOGGING:
+    logger.setLevel(logging.INFO)
+logger.info("Hue1 demo")
+
 
 class HueError(Exception):
     """Exception raised for errors in the response from the bridge
@@ -71,7 +75,7 @@ class Bridge:
             response = requests.get(url=self.url + '/' + route)
             return response.json() # response is of type response, but we're only returning the json (which is a dict)
         except Exception as e:
-            # TODO put some logging here
+            logger.error(e.args)
             raise e
 
     def get_all_data(self):
@@ -114,6 +118,7 @@ class Bridge:
             response = self._request(Light.ROUTE)
             check_response_for_error(response)
         except HueError as e:
+            logger.error("Hue Error " + str(e.args))
             raise e
         except Exception as e:
             raise e
