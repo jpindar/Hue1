@@ -200,6 +200,7 @@ class Scene:
         self.bridge = bridge
         self.data = {}
         self.name = ""
+        self.lights = []
 
     def display(self):
         group = Group(self.bridge, 0)  # group 0 is all lights
@@ -253,7 +254,7 @@ class Light:
         try:
             response = requests.get(url=my_url)
         except Exception as e:
-            raise HueError("Not able to get light data")
+            raise HueError(0,"Not able to get light data")
         return response.json()
 
     def get_data(self):
