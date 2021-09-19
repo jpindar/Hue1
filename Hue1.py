@@ -74,10 +74,10 @@ class Bridge:
         try:
             response = requests.get(url=self.url + '/' + route)
             return response.json() # response is of type response, but we're only returning the json (which is a dict)
-        except ConnectionError as e: # doesn't happen?
+        except ConnectionError as e:  # doesn't happen?
             logger.error(e.args)
             raise e
-        except requests.exceptions.ConnectionError as e: # this happens when no response
+        except requests.exceptions.ConnectionError as e:  # this happens when no response
             logger.error(e.args)
             raise e
         except Exception as e:
@@ -118,7 +118,7 @@ class Bridge:
 
     def get_lights(self):
         """ Get a list of the bridge's lights.
-            Note that light ids start at 1 but list positions start at 0
+            Note that light.index starts at 1 but list positions start at 0
         """
         try:
             response = self._request(Light.ROUTE)
@@ -140,7 +140,6 @@ class Bridge:
             check_response_for_error(response)
         except Exception as e:
             raise HueError(0, "Not able to get scene data")
-
         # create scenes and put them in a list
         self.scene_list = [Scene(self, i) for i in response.keys()]
         for scene in self.scene_list:
@@ -190,7 +189,6 @@ class Bridge:
 
     def set_all(self, attr, value):
         """ Set all lights
-
             Since you can use group 0 for all lights, this is just an example.
         """
         self.get_lights()
@@ -260,7 +258,7 @@ class Light:
         try:
             response = requests.get(url=my_url)
         except Exception as e:
-            raise HueError(0,"Not able to get light data")
+            raise HueError(0, "Not able to get light data")
         return response.json()
 
     def get_data(self):
@@ -323,20 +321,21 @@ def test_scene_commands(bridge):
     """ or is this better? """
     scenes = bridge.scenes()
     for scene in scenes:
-            print(scene.name + ' ' + str(scene.lights) + ' ' + scene.id)
+        print(scene.name + ' ' + str(scene.lights) + ' ' + scene.id)
 
     # scene = bridge.get_scene_by_name("Energize")
     # but there can be multiple sceneS with the same name
     scene = bridge.get_scene_by_id("42")
     if scene is not None:
-       scene.display()
+        scene.display()
 
     # could do this either way?
     # bridge.delete_scene(scene)
     scene.delete()  # this could call bridge.delete_scene()
 
+
 def test_light_commands(bridge):
-    # light = bridge.get_light_by_name("LivingColors 1")
+    # light = bridge.get_light_by_name("bad name")
     # if light is None:
     #     print("Couldn't find a light with that name")
     light = bridge.get_light_by_name("L")
@@ -380,27 +379,29 @@ def test_light_commands(bridge):
     # if you know the index of a light, you can access a light like this:
     # But remember, the index can change, like if someone unplugged a light.
 
+
 def test_bad_commands():
     bridge = Bridge(IP_ADDRESS, USERNAME)
     try:
         bridge.set_all("hue", "000")  # this should cause an error response from the bridge
     except HueError as e:
-       print("Hue Error type " + str(e.type) + " " + e.description)
+        print("Hue Error type " + str(e.type) + " " + e.description)
 
     bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
     try:
-       lights = bridge.lights()
+        lights = bridge.lights()
     except HueError as e:
-       print("Hue Error type " + str(e.type) + " " + e.description)
+        print("Hue Error type " + str(e.type) + " " + e.description)
 
     bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
     try:
-       lights = bridge.lights()
+        lights = bridge.lights()
     except HueError as e:
-       print("Hue Error type " + str(e.type) + e.description)
+        print("Hue Error type " + str(e.type) + e.description)
     except requests.exceptions.ConnectionError as e:
-      logger.error(e.args)
-      print(e.args)
+        logger.error(e.args)
+        print(e.args)
+
 
 def test_light_thats_off():
     """
@@ -412,9 +413,9 @@ def test_light_thats_off():
     if light is None:
         print("Couldn't find a light with that name")
         return
-    light.set("on",False)
-    light.set("on",True)
-    light.set("on",False)
+    light.set("on", False)
+    light.set("on", True)
+    light.set("on", False)
     light.set("hue", 0000)
     light.set("hue", 400)
 
@@ -431,14 +432,13 @@ def main():
     # bridge.set_all("sat", 0)
     # bridge.set_all("hue", 000)
 
-    test_light_thats_off()
+    # test_light_thats_off()
 
     # test_group_commands(bridge)
 
     # test_scene_commands(bridge)
 
-    test_bad_commands()
-
+    # test_bad_commands()
 
     # lights[2].set('on', False)
 
