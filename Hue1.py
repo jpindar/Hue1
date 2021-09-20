@@ -11,6 +11,7 @@ some error types
 201 device (light) is turned off (logically)
 7   invalid value
 1 unauthorized user
+3 resource not available
 
 """
 
@@ -73,11 +74,17 @@ class Bridge:
     def _request(self, route):
         try:
             response = requests.get(url=self.url + '/' + route)
-            return response.json() # response is of type response, but we're only returning the json (which is a dict)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
+            # response is of type response, but we're only returning the json (which is a dict)
+            return response.json()
         except ConnectionError as e:  # doesn't happen?
             logger.error(e.args)
             raise e
         except requests.exceptions.ConnectionError as e:  # this happens when no response
+            logger.error(e.args)
+            raise e
+        except (requests.Timeout, requests.exceptions.RequestException):
             logger.error(e.args)
             raise e
         except Exception as e:
@@ -112,9 +119,13 @@ class Bridge:
         my_url = self.url + "/config/whitelist/" + str(id)
         try:
             response = requests.delete(url=my_url)
-            check_response_for_error(response)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
+            r = response.json()
+            check_response_for_error(r)
         except Exception as e:
-            raise HueError(0, "Not able to delete user")
+            logger.error("Hue Error " + str(e.args))
+            raise e
 
     def get_lights(self):
         """ Get a list of the bridge's lights.
@@ -164,10 +175,12 @@ class Bridge:
         the_url = self.url + "/" + Scene.ROUTE + "/" + str(scene.id)
         try:
             response = requests.delete(url=the_url)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
             r = response.json()
             check_response_for_error(r)
         except Exception as e:
-            raise HueError(0, "Not able to delete scene")
+            raise e
 
     def lights(self):
         self.get_lights()
@@ -234,6 +247,8 @@ class Group:
         msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
             r = response.json()
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
@@ -257,6 +272,8 @@ class Light:
         my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index)
         try:
             response = requests.get(url=my_url)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
         except Exception as e:
             raise HueError(0, "Not able to get light data")
         return response.json()
@@ -297,6 +314,8 @@ class Light:
 
         try:
             response = requests.put(url=my_url, data=msg)
+            if response.status_code != requests.codes.ok:   # should be 200
+                raise HueError(0, "Got bad response status from Hue Bridge")
             r = response.json()
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element should be 'success'
@@ -331,7 +350,7 @@ def test_scene_commands(bridge):
 
     # could do this either way?
     # bridge.delete_scene(scene)
-    scene.delete()  # this could call bridge.delete_scene()
+    # scene.delete()  # this could call bridge.delete_scene()
 
 
 def test_light_commands(bridge):
@@ -428,9 +447,6 @@ def main():
     for light in lights:  # this won't work if lights is a dict
         print(light.index, light.name)
 
-    # bridge.all_on(True)
-    # bridge.set_all("sat", 0)
-    # bridge.set_all("hue", 000)
 
     # test_light_thats_off()
 
