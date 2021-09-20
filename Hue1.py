@@ -36,7 +36,8 @@ ENABLE_LOGGING = True
 
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
-    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+    logging.basicConfig(filename=log_filename, filemode='w',
+                        format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
 if ENABLE_LOGGING:
     logger.setLevel(logging.INFO)
 logger.info("Hue1 demo")
@@ -84,7 +85,7 @@ class Bridge:
         except requests.exceptions.ConnectionError as e:  # this happens when no response
             logger.error(e.args)
             raise e
-        except (requests.Timeout, requests.exceptions.RequestException):
+        except (requests.Timeout, requests.exceptions.RequestException) as e:
             logger.error(e.args)
             raise e
         except Exception as e:
@@ -243,7 +244,8 @@ class Group:
         self.send({attr: value})
 
     def send(self, cmd=None):
-        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.id) + "/action"
+        my_url = self.bridge.url + "/" + \
+            self.ROUTE + "/" + str(self.id) + "/action"
         msg = json.dumps(cmd)
         try:
             response = requests.put(url=my_url, data=msg)
@@ -306,7 +308,8 @@ class Light:
                 raise e
 
     def send(self, cmd=None):
-        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index) + "/state"
+        my_url = self.bridge.url + "/" + self.ROUTE + \
+            "/" + str(self.index) + "/state"
         if cmd is None:
             msg = json.dumps(self.state)
         else:
@@ -420,7 +423,8 @@ def test_light_commands(bridge):
 def test_bad_commands():
     bridge = Bridge(IP_ADDRESS, USERNAME)
     try:
-        bridge.set_all("hue", "000")  # this should cause an error response from the bridge
+        # this should cause an error response from the bridge
+        bridge.set_all("hue", "000")
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
@@ -480,4 +484,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
