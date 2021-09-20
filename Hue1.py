@@ -327,6 +327,24 @@ class Light:
         return r
 
 
+def test_bridge_commands(bridge):
+    bridge.get_all_data()
+    # bridge.get_lights()
+    # bridge.get_scenes()
+    bridge.get_whitelist()
+    try:
+        bridge.delete_user('3nrjWNhLKlC8SNiXnG0Jq1LT5Ht0G4ZDfmVztjvd')
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+
+    try:
+        bridge.delete_user('3tqI0euLpbQU1EAMPMLYWS1p7RZ5hXUhtIVPfMlC')
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+    bridge.get_whitelist()
+    bridge.all_on(True)
+
+
 def test_group_commands(bridge):
     group = Group(bridge, 0)  # group 0 is all lights
     group.set("hue", 0)
@@ -447,16 +465,15 @@ def main():
     for light in lights:  # this won't work if lights is a dict
         print(light.index, light.name)
 
+    test_bridge_commands(bridge)
 
-    # test_light_thats_off()
+    test_light_thats_off()
 
-    # test_group_commands(bridge)
+    test_group_commands(bridge)
 
-    # test_scene_commands(bridge)
+    test_scene_commands(bridge)
 
-    # test_bad_commands()
-
-    # lights[2].set('on', False)
+    test_bad_commands()
 
     bridge.set_all("hue", 40000)
 
