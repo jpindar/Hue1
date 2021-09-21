@@ -64,6 +64,27 @@ def check_response_for_error(result):
             raise HueError(type, "error: " + description)
 
 
+def request(method, url, route, **kwargs):
+    try:
+        response = requests.request(method, url + '/' + route, **kwargs)
+        if response.status_code != requests.codes.ok:   # should be 200
+            raise HueError(0, "Got bad response status from Hue Bridge")
+        # response is of type response, but we're only returning the json (which is a dict)
+        return response.json()
+    except ConnectionError as e:  # doesn't happen?
+        logger.error(e.args)
+        raise e
+    except requests.exceptions.ConnectionError as e:  # this happens when no response
+        logger.error(e.args)
+        raise e
+    except (requests.Timeout, requests.exceptions.RequestException) as e:
+        logger.error(e.args)
+        raise e
+    except Exception as e:
+        logger.error(e.args)
+        raise e
+
+
 class Bridge:
 
     def __init__(self, ip_address, username):
@@ -72,30 +93,10 @@ class Bridge:
         self.url = "http://" + ip_address + "/api/" + username
         self.data = []
 
-    def _request(self, route):
-        try:
-            response = requests.get(url=self.url + '/' + route)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-            # response is of type response, but we're only returning the json (which is a dict)
-            return response.json()
-        except ConnectionError as e:  # doesn't happen?
-            logger.error(e.args)
-            raise e
-        except requests.exceptions.ConnectionError as e:  # this happens when no response
-            logger.error(e.args)
-            raise e
-        except (requests.Timeout, requests.exceptions.RequestException) as e:
-            logger.error(e.args)
-            raise e
-        except Exception as e:
-            logger.error(e.args)
-            raise e
-
     def get_all_data(self):
         """ Get all data from the bridge. """
         try:
-            response = self._request('')
+            response = request("GET", self.url, '')
             check_response_for_error(response)
             self.data = response
         except Exception as e:
@@ -104,7 +105,7 @@ class Bridge:
 
     def get_config(self):
         try:
-            response = self._request('config')
+            response = request("GET", self.url, "config")
             check_response_for_error(response)
         except Exception as e:
             raise HueError(0, "Not able to get data")
@@ -117,13 +118,10 @@ class Bridge:
         return whitelist
 
     def delete_user(self, id):
-        my_url = self.url + "/config/whitelist/" + str(id)
+        route = "config/whitelist/" + str(id)
         try:
-            response = requests.delete(url=my_url)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-            r = response.json()
-            check_response_for_error(r)
+            response = request("DELETE", self.url, route)
+            check_response_for_error(response)
         except Exception as e:
             logger.error("Hue Error " + str(e.args))
             raise e
@@ -133,7 +131,7 @@ class Bridge:
             Note that light.index starts at 1 but list positions start at 0
         """
         try:
-            response = self._request(Light.ROUTE)
+            response = request("GET", self.url, Light.ROUTE)
             check_response_for_error(response)
         except HueError as e:
             logger.error("Hue Error " + str(e.args))
@@ -148,7 +146,7 @@ class Bridge:
 
     def get_scenes(self):
         try:
-            response = self._request(Scene.ROUTE)
+            response = request("GET", self.url, Scene.ROUTE)
             check_response_for_error(response)
         except Exception as e:
             raise HueError(0, "Not able to get scene data")
@@ -173,13 +171,10 @@ class Bridge:
                 return scene
 
     def delete_scene(self, scene):
-        the_url = self.url + "/" + Scene.ROUTE + "/" + str(scene.id)
+        route = Scene.ROUTE + "/" + str(scene.id)
         try:
-            response = requests.delete(url=the_url)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-            r = response.json()
-            check_response_for_error(r)
+            response = request("DELETE", self.url, route)
+            check_response_for_error(response)
         except Exception as e:
             raise e
 
@@ -244,20 +239,16 @@ class Group:
         self.send({attr: value})
 
     def send(self, cmd=None):
-        my_url = self.bridge.url + "/" + \
-            self.ROUTE + "/" + str(self.id) + "/action"
+        route = self.ROUTE + "/" + str(self.id) + "/action"
         msg = json.dumps(cmd)
         try:
-            response = requests.put(url=my_url, data=msg)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-            r = response.json()
+            response = request("PUT", self.bridge.url, route, data=msg)
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
         except Exception as e:
             raise HueError(0, "Not able to send light data")
-        check_response_for_error(r)
-        return r
+        check_response_for_error(response)
+        return response
 
 
 class Light:
@@ -270,19 +261,10 @@ class Light:
         self.name = None
         self.state = None
 
-    def _request(self):
-        my_url = self.bridge.url + "/" + self.ROUTE + "/" + str(self.index)
-        try:
-            response = requests.get(url=my_url)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-        except Exception as e:
-            raise HueError(0, "Not able to get light data")
-        return response.json()
-
     def get_data(self):
+        route = self.ROUTE + "/" + str(self.index)
         try:
-            response = self._request()
+            response = request("GET", self.bridge.url, route)
             self.data = response
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
@@ -308,26 +290,21 @@ class Light:
                 raise e
 
     def send(self, cmd=None):
-        my_url = self.bridge.url + "/" + self.ROUTE + \
-            "/" + str(self.index) + "/state"
+        route = self.ROUTE + "/" + str(self.index) + "/state"
         if cmd is None:
             msg = json.dumps(self.state)
         else:
             msg = json.dumps(cmd)
-
         try:
-            response = requests.put(url=my_url, data=msg)
-            if response.status_code != requests.codes.ok:   # should be 200
-                raise HueError(0, "Got bad response status from Hue Bridge")
-            r = response.json()
+            response = request("PUT", self.bridge.url, route, data=msg)
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element should be 'success'
             # it will be 'success' if the light is physically turned off
         except Exception as e:
             logger.warning(e.args)
             raise HueError(0, "Not able to send light data")
-        check_response_for_error(r)
-        return r
+        check_response_for_error(response)
+        return response
 
 
 def test_bridge_commands(bridge):
