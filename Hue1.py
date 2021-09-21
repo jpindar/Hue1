@@ -135,7 +135,8 @@ class Bridge:
             raise e
 
     def get_lights(self):
-        """ Get a list of the bridge's lights.
+        """
+            Get a list of the bridge's lights.
             Note that light.index starts at 1 but list positions start at 0
         """
         try:
@@ -144,12 +145,7 @@ class Bridge:
         except HueError as e:
             logger.error("Hue Error " + str(e.args))
             raise e
-        # except Exception as e:
-        #     raise e
-        # create lights and put them in a list
-        self.light_list = [Light(self, i) for i in response.keys()]
-        for light in self.light_list:
-            light.populate(response[str(light.index)])
+        self.light_list = [Light(self, i, response[str(i)]) for i in response.keys()]
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
 
     def get_scenes(self):
@@ -158,12 +154,7 @@ class Bridge:
             check_response_for_error(response)
         except Exception as e:
             raise HueError(0, "Not able to get scene data")
-        # create scenes and put them in a list
-        self.scene_list = [Scene(self, i) for i in response.keys()]
-        for scene in self.scene_list:
-            scene.data = response[str(scene.id)]
-            scene.name = scene.data['name']
-            scene.lights = scene.data['lights']
+        self.scene_list = [Scene(self, i, response[str(i)]) for i in response.keys()]
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
 
     def get_scene_by_name(self, desired_name):
@@ -188,6 +179,10 @@ class Bridge:
             raise e
 
     def lights(self):
+        # if we were going for speed at the expense of possible
+        # errors (like if a light was added or removed from the bridge) we could add this:
+        # if self.light_list == {}:
+        # note that physically turning a light off does not remove it from the bridge's list
         self.get_lights()
         return self.light_list
 
@@ -217,12 +212,24 @@ class Bridge:
 class Scene:
     ROUTE = 'scenes'
 
-    def __init__(self, bridge, id):
+    def __init__(self, bridge, id, *args):
         self.id = id
         self.bridge = bridge
         self.data = {}
         self.name = ""
         self.lights = []
+        if args is not None:
+            self.populate(args[0])
+
+    def populate(self, dict_data):
+        try:
+            self.data = dict_data
+            self.name = self.data['name']
+            self.lights = self.data['lights']
+        except KeyError as e:
+            raise HueError(0, "Not able to update scene data")
+        except Exception as e:
+            raise e
 
     def display(self):
         group = Group(self.bridge, 0)  # group 0 is all lights
@@ -264,12 +271,14 @@ class Group:
 class Light:
     ROUTE = 'lights'
 
-    def __init__(self, bridge, index):
+    def __init__(self, bridge, index, *args):
         self.index = int(index)
         self.bridge = bridge
         self.data = None
         self.name = None
         self.state = None
+        if args is not None:
+            self.populate(args[0])
 
     def get_data(self):
         route = self.ROUTE + "/" + str(self.index)
@@ -286,9 +295,12 @@ class Light:
         try:
             self.data = dict_data
             self.name = self.data['name']
-            self.state = self.data['state']  # creates a reference, not a copy
-        except Exception as e:
+            # creates a reference, not a copy
+            self.state = self.data['state']
+        except KeyError as e:
             raise HueError(0, "Not able to update light data")
+        except Exception as e:
+            raise e
 
     def set(self, attr, value):
         try:
@@ -453,9 +465,12 @@ def main():
     print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
-    lights = bridge.lights()
-    for light in lights:  # this won't work if lights is a dict
-        print(light.index, light.name)
+    try:
+        lights = bridge.lights()
+        for light in lights:  # this won't work if lights is a dict
+            print(light.index, light.name)
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
 
     test_bridge_commands(bridge)
 
