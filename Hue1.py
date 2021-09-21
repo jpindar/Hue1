@@ -36,8 +36,7 @@ ENABLE_LOGGING = True
 
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
-    logging.basicConfig(filename=log_filename, filemode='w',
-                        format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
 if ENABLE_LOGGING:
     logger.setLevel(logging.INFO)
 logger.info("Hue1 demo")
@@ -434,6 +433,12 @@ def test_bad_commands():
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
+    bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
+    try:
+        bridge.get_all_data()
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+
     bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
     try:
         lights = bridge.lights()
@@ -463,6 +468,15 @@ def test_light_thats_off():
 
 def main():
     print("Hue Demo")
+
+    """
+     bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
+    try:
+        bridge.get_all_data()
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+     """
+
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
     try:
