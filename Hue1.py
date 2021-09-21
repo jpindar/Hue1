@@ -218,17 +218,14 @@ class Scene:
         self.name = ""
         self.lights = []
         if args is not None:
-            self.populate(args[0])
-
-    def populate(self, dict_data):
-        try:
-            self.data = dict_data
-            self.name = self.data['name']
-            self.lights = self.data['lights']
-        except KeyError as e:
-            raise HueError(0, "Not able to update scene data")
-        except Exception as e:
-            raise e
+            try:
+                self.data = args[0]
+                self.name = self.data['name']
+                self.lights = self.data['lights']
+            except KeyError as e:
+                raise HueError(0, "Not able to update scene data")
+            except Exception as e:
+                raise e
 
     def display(self):
         group = Group(self.bridge, 0)  # group 0 is all lights
@@ -277,7 +274,14 @@ class Light:
         self.name = None
         self.state = None
         if args is not None:
-            self.populate(args[0])
+            try:
+                self.data = args[0]
+                self.name = self.data['name']
+                self.state = self.data['state'] # creates a reference, not a copy
+            except KeyError as e:
+                raise HueError(0, "Not able to update light data")
+            except Exception as e:
+                raise e
 
     def get_data(self):
         route = self.ROUTE + "/" + str(self.index)
@@ -289,17 +293,6 @@ class Light:
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
             raise HueError(0, "Not able to get light data")
-
-    def populate(self, dict_data):
-        try:
-            self.data = dict_data
-            self.name = self.data['name']
-            # creates a reference, not a copy
-            self.state = self.data['state']
-        except KeyError as e:
-            raise HueError(0, "Not able to update light data")
-        except Exception as e:
-            raise e
 
     def set(self, attr, value):
         try:
