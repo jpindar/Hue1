@@ -99,16 +99,24 @@ class Bridge:
             response = request("GET", self.url, '')
             check_response_for_error(response)
             self.data = response
+        except HueError as e:
+            logger.error(e.args)
+            raise e
         except Exception as e:
-            raise HueError(0, "Not able to get data")
+            logger.error(e.args)
+            raise e
         return response
 
     def get_config(self):
         try:
             response = request("GET", self.url, "config")
             check_response_for_error(response)
+        except HueError as e:
+            logger.error(e.args)
+            raise e
         except Exception as e:
-            raise HueError(0, "Not able to get data")
+            logger.error(e.args)
+            raise e
         return response
 
     def get_whitelist(self):
@@ -123,7 +131,7 @@ class Bridge:
             response = request("DELETE", self.url, route)
             check_response_for_error(response)
         except Exception as e:
-            logger.error("Hue Error " + str(e.args))
+            logger.error(e.args)
             raise e
 
     def get_lights(self):
@@ -176,6 +184,7 @@ class Bridge:
             response = request("DELETE", self.url, route)
             check_response_for_error(response)
         except Exception as e:
+            logger.error(e.args)
             raise e
 
     def lights(self):
@@ -245,9 +254,10 @@ class Group:
             response = request("PUT", self.bridge.url, route, data=msg)
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
+            check_response_for_error(response)
         except Exception as e:
-            raise HueError(0, "Not able to send light data")
-        check_response_for_error(response)
+            logger.error(e.args)
+            raise e
         return response
 
 
@@ -265,6 +275,7 @@ class Light:
         route = self.ROUTE + "/" + str(self.index)
         try:
             response = request("GET", self.bridge.url, route)
+            check_response_for_error(response)
             self.data = response
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
@@ -302,7 +313,7 @@ class Light:
             # it will be 'success' if the light is physically turned off
         except Exception as e:
             logger.warning(e.args)
-            raise HueError(0, "Not able to send light data")
+            raise e
         check_response_for_error(response)
         return response
 
