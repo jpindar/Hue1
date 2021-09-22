@@ -248,11 +248,8 @@ class Group:
         self.bridge = bridge
 
     def set(self, attr, value):
-        self.send({attr: value})
-
-    def send(self, cmd=None):
         route = self.ROUTE + "/" + str(self.id) + "/action"
-        msg = json.dumps(cmd)
+        msg = json.dumps({attr: value})
         try:
             response = request("PUT", self.bridge.url, route, data=msg)
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
@@ -261,7 +258,6 @@ class Group:
         except Exception as e:
             logger.error(e.args)
             raise e
-        return response
 
 
 class Light:
@@ -295,31 +291,23 @@ class Light:
             raise HueError(0, "Not able to get light data")
 
     def set(self, attr, value):
-        try:
-            self.send({attr: value})
-        except HueError as e:
-            # print("Hue Error type " + str(e.type) + " " + e.description)
-            if e.type == LIGHT_IS_TURNED_OFF:
-                pass
-            else:
-                raise e
-
-    def send(self, cmd=None):
         route = self.ROUTE + "/" + str(self.index) + "/state"
-        if cmd is None:
-            msg = json.dumps(self.state)
-        else:
-            msg = json.dumps(cmd)
+        msg = json.dumps({attr: value})
         try:
             response = request("PUT", self.bridge.url, route, data=msg)
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element should be 'success'
             # it will be 'success' if the light is physically turned off
+            check_response_for_error(response)
+        except HueError as e:
+            logger.warning(e.args)
+            if e.type == LIGHT_IS_TURNED_OFF:
+                pass
+            else:
+                raise e
         except Exception as e:
             logger.warning(e.args)
             raise e
-        check_response_for_error(response)
-        return response
 
 
 def test_bridge_commands(bridge):
@@ -476,6 +464,7 @@ def main():
         lights = bridge.lights()
         for light in lights:  # this won't work if lights is a dict
             print(light.index, light.name)
+            light.set("hue", 0000)
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
