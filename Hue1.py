@@ -185,9 +185,6 @@ class Bridge:
         self.get_lights()
         return self.light_list
 
-    def scenes(self):
-        self.get_scenes()
-        return self.scene_list
 
     def get_light_by_name(self, this_name):
         self.get_lights()
@@ -339,7 +336,7 @@ def test_scene_commands(bridge):
     # for scene in bridge.scene_list:
     #    print(scene.name)
     """ or is this better? """
-    scenes = bridge.scenes()
+    scenes = bridge.get_scenes()
     for scene in scenes:
         print(scene.name + ' ' + str(scene.lights) + ' ' + scene.id)
 
