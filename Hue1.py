@@ -208,15 +208,15 @@ class Bridge:
 class Scene:
     ROUTE = 'scenes'
 
-    def __init__(self, bridge, id, *args):
+    def __init__(self, bridge, id, data = None):
         self.id = id
         self.bridge = bridge
         self.data = {}
         self.name = ""
         self.lights = []
-        if args is not None:
+        if data is not None:
             try:
-                self.data = args[0]
+                self.data = data
                 self.name = self.data['name']
                 self.lights = self.data['lights']
             except KeyError as e:
@@ -260,15 +260,15 @@ class Group:
 class Light:
     ROUTE = 'lights'
 
-    def __init__(self, bridge, index, *args):
+    def __init__(self, bridge, index, data = None):
         self.index = int(index)
         self.bridge = bridge
         self.data = None
         self.name = None
         self.state = None
-        if args is not None:
+        if data is not None:
             try:
-                self.data = args[0]
+                self.data = data
                 self.name = self.data['name']
                 self.state = self.data['state'] # creates a reference, not a copy
             except KeyError as e:
