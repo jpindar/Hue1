@@ -146,6 +146,7 @@ class Bridge:
             raise e
         self.light_list = [Light(self, i, response[str(i)]) for i in response.keys()]
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
+        return self.light_list
 
     def get_scenes(self):
         try:
@@ -155,6 +156,7 @@ class Bridge:
             raise HueError(0, "Not able to get scene data")
         self.scene_list = [Scene(self, i, response[str(i)]) for i in response.keys()]
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
+        return self.scene_list
 
     def get_scene_by_name(self, desired_name):
         self.get_scenes()
@@ -187,10 +189,12 @@ class Bridge:
 
 
     def get_light_by_name(self, this_name):
-        self.get_lights()
+        self.light_list = self.get_lights()
         for light in self.light_list:
             if light.name == this_name:
                 return light
+        return None
+
 
     def all_on(self, on):
         group = Group(self, 0)  # group 0 is all lights
@@ -317,10 +321,6 @@ def test_bridge_commands(bridge):
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
-    try:
-        bridge.delete_user('3tqI0euLpbQU1EAMPMLYWS1p7RZ5hXUhtIVPfMlC')
-    except HueError as e:
-        print("Hue Error type " + str(e.type) + " " + e.description)
     bridge.get_whitelist()
     bridge.all_on(True)
 
@@ -435,6 +435,11 @@ def test_light_thats_off():
     but trying to set its hue etc. returns an error in the response
     """
     bridge = Bridge(IP_ADDRESS, USERNAME)
+
+    light = bridge.get_light_by_name("badName")
+    if light is None:
+        print("Couldn't find a light with that name")
+
     light = bridge.get_light_by_name("U")
     if light is None:
         print("Couldn't find a light with that name")
