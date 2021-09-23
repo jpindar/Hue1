@@ -333,16 +333,18 @@ def test_group_commands(bridge):
 
 def test_scene_commands(bridge):
     # bridge.get_scenes()
-    # for scene in bridge.scene_list:
-    #    print(scene.name)
-    """ or is this better? """
+    # could do for scene in bridge.scene_list, but that assumes bridge is populated
+    # maybe bridge *should* be populated in its constructor?
     scenes = bridge.get_scenes()
     for scene in scenes:
         print(scene.name + ' ' + str(scene.lights) + ' ' + scene.id)
 
-    # scene = bridge.get_scene_by_name("Energize")
-    # but there can be multiple sceneS with the same name
-    scene = bridge.get_scene_by_id("42")
+     # note there can be multiple scenes with the same name
+    scene = bridge.get_scene_by_name("Energize")
+    if scene is not None:
+        scene.display()
+
+    scene = bridge.get_scene_by_id("bad id")
     if scene is not None:
         scene.display()
 
