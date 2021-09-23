@@ -1,17 +1,30 @@
 
 # my stuff
-junk/
+**/junk/
+temp/
+tmp/
+inbox/
+old/
+dl/
+TODO/
+archive/
+assets/
+obsolete/
+New Folder/
 
+notes.txt
 # Pycharm
 .idea
 
 # VScode
 .vscode
+workspace.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # C extensions
 *.so
