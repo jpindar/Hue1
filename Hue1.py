@@ -68,8 +68,13 @@ def request(method, url, route, **kwargs):
         response = requests.request(method, url + '/' + route, **kwargs)
         if response.status_code != requests.codes.ok:   # should be 200
             raise HueError(0, "Got bad response status from Hue Bridge")
-        # response is of type response, but we're only returning the json (which is a dict)
-        return response.json()
+        # response.json() can be either a dict or a list containing a dict
+        # AFAIK, the list only ever has one element, but we can't be sure of that
+        # so instead of stripping the dict out of the list, let's do the opposite
+        r = response.json()
+        if isinstance(r,dict):
+            r = [r]
+        return r
     except ConnectionError as e:  # doesn't happen?
         logger.error(e.args)
         raise e
@@ -90,21 +95,21 @@ class Bridge:
         self.light_list = []
         self.scene_list = []
         self.url = "http://" + ip_address + "/api/" + username
-        self.data = []
+        self.data = {}
 
     def get_all_data(self):
         """ Get all data from the bridge. """
         try:
             response = request("GET", self.url, '')
             check_response_for_error(response)
-            self.data = response
+            self.data = response[0]
         except HueError as e:
             logger.error(e.args)
             raise e
         except Exception as e:
             logger.error(e.args)
             raise e
-        return response
+        return self.data
 
     def get_config(self):
         try:
@@ -116,7 +121,7 @@ class Bridge:
         except Exception as e:
             logger.error(e.args)
             raise e
-        return response
+        return response[0]
 
     def get_whitelist(self):
         """ Get the bridge's whitelist of usernames """
@@ -144,7 +149,8 @@ class Bridge:
         except HueError as e:
             logger.error("Hue Error " + str(e.args))
             raise e
-        self.light_list = [Light(self, i, response[str(i)]) for i in response.keys()]
+        r = response[0]
+        self.light_list = [Light(self, i, r[str(i)]) for i in r.keys()]
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
         return self.light_list
 
@@ -154,7 +160,8 @@ class Bridge:
             check_response_for_error(response)
         except Exception as e:
             raise HueError(0, "Not able to get scene data")
-        self.scene_list = [Scene(self, i, response[str(i)]) for i in response.keys()]
+        r = response[0]
+        self.scene_list = [Scene(self, i, r[str(i)]) for i in r.keys()]
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
         return self.scene_list
 
@@ -163,12 +170,14 @@ class Bridge:
         for scene in self.scene_list:
             if scene.name == desired_name:
                 return scene
+        return None
 
     def get_scene_by_id(self, desired_id):
         self.get_scenes()
         for scene in self.scene_list:
             if scene.id == desired_id:
                 return scene
+        return None
 
     def delete_scene(self, scene):
         route = Scene.ROUTE + "/" + str(scene.id)
@@ -267,9 +276,9 @@ class Light:
     def __init__(self, bridge, index, data = None):
         self.index = int(index)
         self.bridge = bridge
-        self.data = None
-        self.name = None
-        self.state = None
+        self.data = {}
+        self.name = ""
+        self.state = {}
         if data is not None:
             try:
                 self.data = data
@@ -285,7 +294,7 @@ class Light:
         try:
             response = request("GET", self.bridge.url, route)
             check_response_for_error(response)
-            self.data = response
+            self.data = response[0]
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
         except Exception as e:
@@ -463,6 +472,10 @@ def main():
      """
 
     bridge = Bridge(IP_ADDRESS, USERNAME)
+
+    bridge.all_on(True)
+
+    bridge.set_all('on', False)
 
     try:
         lights = bridge.lights()
