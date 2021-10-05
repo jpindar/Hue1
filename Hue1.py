@@ -25,7 +25,7 @@ import requests
 
 ___author___ = "jpindar@jpindar.com"
 log_filename = 'Hue1.log'
-
+script_name = 'Hue1.py'
 # It's OK to leave the credentials here for now
 # because my bridge is not accessible from outside my LAN
 BAD_IP_ADDRESS = "10.0.1.99:80"
@@ -337,22 +337,21 @@ def main():
     parser.add_argument("-scene", "--scene", type=str, default=0, help="activate scene")
     parser.add_argument("-light", "--light", nargs=2, type=str, help="send JSON string to one light")
     # NORMAL PARSING
-    # args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
     # INJECTING ARGS FOR TESTING
-    # args = parser.parse_args()
-    # args = parser.parse_args(["--lights"])   # OK
-    # args = parser.parse_args(["--light", "4", '{"on": true, "bri":100}'])
-    # args = parser.parse_args(["--light", "U", '{"on": true, "bri":100}'])
-    args = parser.parse_args(["--light", "bad name", '{"on": true, "bri":100}'])
-    # args = parser.parse_args(["--scenes"])
-    # args = parser.parse_args(["-scene", 'ac637e2f0-on-0'])
-    # args = parser.parse_args(["-scene", 'bad id'])
-    # args = parser.parse_args(["-off"])
+    # args = parser.parse_args()  # no output, which I think is correct
+    # args = parser.parse_args(["--lights"])   # works
+    # args = parser.parse_args(["--light", "badname", '{"on": true, "bri":100}'])  # works as expected
+    # args = parser.parse_args(["--light", "U", '{"on": true, "bri":100}'])  # works
+    # args = parser.parse_args(["--scenes"])  # works, could use some output formatting #TODO
+    # args = parser.parse_args(["-scene", 'ac637e2f0-on-0'])  # works
+    # args = parser.parse_args(["-scene", 'bad id'])  # works as expected
+    # args = parser.parse_args(["-off"])  # works
 
 
     # print(args)
     # endregion
-    print("Hue Demo")
+    # print("Hue Demo")
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
     if args.light: # OK
@@ -361,19 +360,21 @@ def main():
         #light = bridge.get_light_by_index(int(args.light[0]))
         light = bridge.get_light_by_name(args.light[0])
         if light is None:
-            print("no light by that name")
+            print(script_name + " did not find any light by that name")
         else:
-            print('sending', args.light[1], 'to', light.data['name'])
+            print(script_name + 'sending', args.light[1], 'to', light.data['name'])
             light.send(args.light[1])
 
     if args.lights:  # OK
         bridge.get_lights()
+        print(script_name + " found these lights")
         for light in bridge.light_list:
             print(light.index, light.name)
 
 
     if args.scenes:
         scenes = bridge.get_scenes()
+        print(script_name + " found these scenes")
         i = 1
         for scene in scenes:
             print(i, scene.data['name'], ' ', scene.data['lights'], ' ', scene.id)
@@ -386,6 +387,8 @@ def main():
         scene = bridge.get_scene_by_id(args.scene)
         if scene is not None:
             scene.display()
+        else:
+            print(script_name + " did not find a scene by that name")
 
 if __name__ == "__main__":
     main()
