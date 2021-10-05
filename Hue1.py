@@ -302,7 +302,6 @@ class Light:
             raise HueError(0, "Not able to get light data")
 
 
-
     def set(self, attr, value):
         if isinstance(value,str):
             if value.lower() == "true":
@@ -333,21 +332,19 @@ class Light:
             raise e
 
 
-def main():
-    # region parse arguments
+def create_parser():
     parser = argparse.ArgumentParser(description='controls Hue lights')
-    # parser.add_argument("-l", "--lights", help="list lights", action="store_true")  # boolean flag
     parser.add_argument("-lights", "--lights", help="list lights", action="store_true")  # boolean flag
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
     parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
-    # parser.add_argument("-s", "--scene", type=int, default=0, help="activate scene")
     parser.add_argument("-scene", "--scene", type=str, default=0, help="activate scene")
     parser.add_argument("-light", "--light", nargs='+', help="send either a json string or a parameter and a value to one light")
-    # NORMAL PARSING
-    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
-    # INJECTING ARGS FOR TESTING
+    return parser
+
+
+def test_parser(parser):
     # args = parser.parse_args()  # no output, which I think is correct
-    # args = parser.parse_args(["--lights"])   # works
+    args = parser.parse_args(["--lights"])   # works
     # args = parser.parse_args(["--light", "badname", '{"on": true, "bri":100}'])  # works as expected
     # args = parser.parse_args(["--light", "U", '{"on": true, "bri":100}'])  # works
     # args = parser.parse_args(["--scenes"])  # works, could use some output formatting #TODO
@@ -359,7 +356,18 @@ def main():
     # args = parser.parse_args(["-light", "U", '{\"on\": false}'])  # you need to escape the " when doing this on the command line
     # args = parser.parse_args(["-light", "U", "hue", "9000"]) # works
     # args = parser.parse_args(["-light", "U", "on", "false"])  # works
-    # endregion
+    return args
+
+
+def main():
+    parser = create_parser()
+    TEST_PARSER = False
+    if TEST_PARSER:
+        # INJECTING ARGS FOR TESTING
+        args = test_parser(parser)
+    else:
+        # NORMAL PARSING
+        args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
