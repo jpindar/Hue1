@@ -347,6 +347,9 @@ def main():
     # args = parser.parse_args(["-scene", 'ac637e2f0-on-0'])  # works
     # args = parser.parse_args(["-scene", 'bad id'])  # works as expected
     # args = parser.parse_args(["-off"])  # works
+    # args = parser.parse_args(["-light", "U"])  # works as expected
+    # args = parser.parse_args(["-light", "U", '{"on": true}'])       # this works from here, however...
+    # args = parser.parse_args(["-light", "U", '{\"on\": false}'])  # you need to escape the " when doing this on the command line
 
 
     # print(args)
