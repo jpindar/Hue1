@@ -304,6 +304,13 @@ class Light:
 
 
     def set(self, attr, value):
+        if isinstance(value,str):
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            elif value.lstrip("-+").isdigit():  # oddly, there is no is_int() function
+                value = int(value)
         self.send(json.dumps({attr: value}))
 
 
@@ -335,7 +342,7 @@ def main():
     parser.add_argument("-scenes", "--scenes", help="list scenes", action="store_true")  # boolean flag
     # parser.add_argument("-s", "--scene", type=int, default=0, help="activate scene")
     parser.add_argument("-scene", "--scene", type=str, default=0, help="activate scene")
-    parser.add_argument("-light", "--light", nargs=2, type=str, help="send JSON string to one light")
+    parser.add_argument("-light", "--light", nargs='+', help="send either a json string or a parameter and a value to one light")
     # NORMAL PARSING
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
     # INJECTING ARGS FOR TESTING
@@ -350,11 +357,10 @@ def main():
     # args = parser.parse_args(["-light", "U"])  # works as expected
     # args = parser.parse_args(["-light", "U", '{"on": true}'])       # this works from here, however...
     # args = parser.parse_args(["-light", "U", '{\"on\": false}'])  # you need to escape the " when doing this on the command line
-
-
-    # print(args)
+    # args = parser.parse_args(["-light", "U", "hue", "9000"]) # works
+    # args = parser.parse_args(["-light", "U", "on", "false"])  # works
     # endregion
-    # print("Hue Demo")
+
     bridge = Bridge(IP_ADDRESS, USERNAME)
 
     if args.light: # OK
@@ -365,8 +371,11 @@ def main():
         if light is None:
             print(script_name + " did not find any light by that name")
         else:
-            print(script_name + 'sending', args.light[1], 'to', light.data['name'])
-            light.send(args.light[1])
+            if len(args.light) == 2:
+                print(script_name + ' sending', args.light[1], 'to', light.data['name'])
+                light.send(args.light[1])
+            else:
+                light.set(args.light[1], args.light[2])
 
     if args.lights:  # OK
         bridge.get_lights()
