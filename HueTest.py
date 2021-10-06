@@ -17,9 +17,8 @@ BAD_USERNAME = "invalid_username"
 ENABLE_LOGGING = True
 
 log_filename = 'Hue1.log'
-logger = logging.getLogger(__name__)
-if __name__ == "__main__":
-    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+logger = logging.getLogger()  # logger with the default name 'root'
+logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
 if ENABLE_LOGGING:
     logger.setLevel(logging.INFO)
 logger.info("Hue1 demo")
