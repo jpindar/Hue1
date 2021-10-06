@@ -1,5 +1,6 @@
+#!python3
 """
-Project: My First Hue Demo
+Project: the Hue1 module
 File: Hue1.py
 Author: jpindar@jpindar.com
 Requires: https://pypi.org/project/requests/2.7.0/
@@ -29,7 +30,7 @@ ENABLE_LOGGING = True
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     log_filename = 'Hue1.log'
-    logging.basicConfig(filename=log_filename, filemode='w',  format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
 if ENABLE_LOGGING:
     logger.setLevel(logging.INFO)
 
@@ -290,9 +291,20 @@ class Light:
         except Exception as e:
             raise HueError(0, "Not able to get light data")
 
+
     def set(self, attr, value):
+        if isinstance(value,str):
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            elif value.lstrip("-+").isdigit():  # oddly, there is no is_int() function
+                value = int(value)
+        self.send(json.dumps({attr: value}))
+
+
+    def send(self, msg):
         route = self.ROUTE + "/" + str(self.index) + "/state"
-        msg = json.dumps({attr: value})
         try:
             response = request("PUT", self.bridge.url, route, data=msg)
             #  r is a list of dicts such as [{'success':{/lights/1/state/on':True}]
@@ -312,7 +324,8 @@ class Light:
 
 def _main():
 
-    print("Hue Demo")
+    print("Hue Module")
+    logger.info("Hue1 module")
     IP_ADDRESS = "10.0.1.3:80"
     USERNAME = "vXBlVENNfyKjfF3s"
 
@@ -323,7 +336,6 @@ def _main():
         print("Hue Error type " + str(e.type) + " " + e.description)
 
 
-    if __name__ == "__main__":
-       _main()
-
+if __name__ == "__main__":
+    _main()
 
