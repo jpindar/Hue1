@@ -86,6 +86,7 @@ class Bridge:
     def __init__(self, ip_address, username):
         self.light_list = []
         self.scene_list = []
+        self.group_list = []
         self.url = "http://" + ip_address + "/api/" + username
         self.data = {}
 
@@ -152,6 +153,19 @@ class Bridge:
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
         return self.scene_list
 
+    def get_groups(self):
+        try:
+            response = request("GET", self.url, Group.ROUTE)
+            check_response_for_error(response)
+        except HueError as e:
+            logger.error(e.args)
+            raise e
+        r = response[0] #note that while the keys in thi look like indexes, they are not necesarily incluive or ordered
+        self.group_list = [Group(self, i, r[str(i)]) for i in r.keys()]
+        self.group_list = sorted(self.group_list, key=lambda x: x.name)
+        return self.group_list
+
+
     def get_scene_by_name(self, desired_name):
         self.get_scenes()
         for scene in self.scene_list:
@@ -174,6 +188,16 @@ class Bridge:
         except HueError as e:
             logger.error(e.args)
             raise e
+
+    def delete_group(self, group):
+        route = Group.ROUTE + "/" + str(group.id)
+        try:
+            response = request("DELETE", self.url, route)
+            check_response_for_error(response)
+        except HueError as e:
+            logger.error(e.args)
+            raise e
+
 
     def lights(self):
         # if we were going for speed at the expense of possible
@@ -238,9 +262,19 @@ class Group:
 
     ROUTE = 'groups'
 
-    def __init__(self, bridge, id):
+    def __init__(self, bridge, id, data = None):
         self.id = id
         self.bridge = bridge
+        self.data = {}
+        self.name = ''
+        self.lights = []
+        if data is not None:
+            try:
+                self.data = data
+                self.name = self.data['name']
+                self.lights = self.data['lights']
+            except KeyError as e:
+                raise HueError(0, "Not able to parse group data")
 
     def set(self, attr, value):
         route = self.ROUTE + "/" + str(self.id) + "/action"
@@ -280,6 +314,7 @@ class Light:
             self.data = response[0]
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
+            return self.data
         except HueError as e:
             logger.error(e.args)
             raise e
