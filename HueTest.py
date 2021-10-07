@@ -29,12 +29,22 @@ def test_bridge_commands(bridge):
     # bridge.get_lights()
     # bridge.get_scenes()
     bridge.get_whitelist()
+    bridge.all_on(True)
+    bridge.set_all('on', False)
+    light = bridge.get_light_by_name("bad name")
+    if light is None:
+        print("Couldn't find a light with that name")
+    light = bridge.get_light_by_name("L")
+    if light is None:
+        print("Couldn't find a light with that name")
+
+    # this should raise a Hueerror exception since this user doesn't exist
+    # in a real application this should probably fail silently
     try:
         bridge.delete_user('3nrjWNhLKlC8SNiXnG0Jq1LT5Ht0G4ZDfmVztjvd')
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
-    bridge.get_whitelist()
     bridge.all_on(True)
 
 
@@ -67,12 +77,20 @@ def test_scene_commands(bridge):
 
 
 def test_light_commands(bridge):
-    # light = bridge.get_light_by_name("bad name")
-    # if light is None:
-    #     print("Couldn't find a light with that name")
+
+    try:
+        lights = bridge.lights()
+        for light in lights:  # this won't work if lights is a dict
+            print(light.index, light.name)
+            light.set("hue", 0000)
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+
     light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
+
+    light.set('on', True)
 
     # this doesn't work, probably because some of the parameters in state are readonly
     # light.state['on'] = True
@@ -166,36 +184,14 @@ def test_light_thats_off():
 
 def main():
     print("Hue Demo")
-
-    bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
-    try:
-        bridge.get_all_data()
-    except HueError as e:
-        print("Hue Error type " + str(e.type) + " " + e.description)
-
     bridge = Bridge(IP_ADDRESS, USERNAME)
-    bridge.all_on(True)
-    bridge.set_all('on', False)
-
-    try:
-        lights = bridge.lights()
-        for light in lights:  # this won't work if lights is a dict
-            print(light.index, light.name)
-            light.set("hue", 0000)
-    except HueError as e:
-        print("Hue Error type " + str(e.type) + " " + e.description)
-
     test_bridge_commands(bridge)
-
+    test_light_commands(bridge)
     test_light_thats_off()
-
     test_group_commands(bridge)
-
     test_scene_commands(bridge)
-
     # test_bad_commands()
-
-    bridge.set_all("hue", 40000)
+    bridge.set_all("hue", 40000) # white
 
 
 if __name__ == "__main__":
