@@ -76,6 +76,7 @@ def request(method, url, route, **kwargs):
         logger.error(e.args)
         raise e
     except Exception as e:
+        logger.error("unknown error condition in request() method")
         logger.error(e.args)
         raise e
 
@@ -97,9 +98,6 @@ class Bridge:
         except HueError as e:
             logger.error(e.args)
             raise e
-        except Exception as e:
-            logger.error(e.args)
-            raise e
         return self.data
 
     def get_config(self):
@@ -107,9 +105,6 @@ class Bridge:
             response = request("GET", self.url, "config")
             check_response_for_error(response)
         except HueError as e:
-            logger.error(e.args)
-            raise e
-        except Exception as e:
             logger.error(e.args)
             raise e
         return response[0]
@@ -125,7 +120,7 @@ class Bridge:
         try:
             response = request("DELETE", self.url, route)
             check_response_for_error(response)
-        except Exception as e:
+        except HueError as e:
             logger.error(e.args)
             raise e
 
@@ -149,8 +144,9 @@ class Bridge:
         try:
             response = request("GET", self.url, Scene.ROUTE)
             check_response_for_error(response)
-        except Exception as e:
-            raise HueError(0, "Not able to get scene data")
+        except HueError as e:
+            logger.error(e.args)
+            raise e
         r = response[0]
         self.scene_list = [Scene(self, i, r[str(i)]) for i in r.keys()]
         self.scene_list = sorted(self.scene_list, key=lambda x: x.name)
@@ -175,7 +171,7 @@ class Bridge:
         try:
             response = request("DELETE", self.url, route)
             check_response_for_error(response)
-        except Exception as e:
+        except HueError as e:
             logger.error(e.args)
             raise e
 
@@ -224,9 +220,7 @@ class Scene:
                 self.name = self.data['name']
                 self.lights = self.data['lights']
             except KeyError as e:
-                raise HueError(0, "Not able to update scene data")
-            except Exception as e:
-                raise e
+                raise HueError(0, "Not able to parse scene data")
 
     def display(self):
         group = Group(self.bridge, 0)  # group 0 is all lights
@@ -256,7 +250,7 @@ class Group:
             #  r should be a list of dicts such as [{'success':{/lights/1/state/on':True}]
             #  1st element of 1st element == 'success'
             check_response_for_error(response)
-        except Exception as e:
+        except HueError as e:
             logger.error(e.args)
             raise e
 
@@ -276,9 +270,7 @@ class Light:
                 self.name = self.data['name']
                 self.state = self.data['state'] # creates a reference, not a copy
             except KeyError as e:
-                raise HueError(0, "Not able to update light data")
-            except Exception as e:
-                raise e
+                raise HueError(0, "Not able to parse light data")
 
     def get_data(self):
         route = self.ROUTE + "/" + str(self.index)
@@ -288,8 +280,9 @@ class Light:
             self.data = response[0]
             self.name = self.data['name']
             self.state = self.data['state']  # creates a reference, not a copy
-        except Exception as e:
-            raise HueError(0, "Not able to get light data")
+        except HueError as e:
+            logger.error(e.args)
+            raise e
 
 
     def set(self, attr, value):
@@ -317,9 +310,6 @@ class Light:
                 pass
             else:
                 raise e
-        except Exception as e:
-            logger.warning(e.args)
-            raise e
 
 
 def _main():
