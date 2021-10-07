@@ -37,6 +37,7 @@ def test_bridge_commands(bridge):
     light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
+    light.set('hue', 000)
 
     # this should raise a Hueerror exception since this user doesn't exist
     # in a real application this should probably fail silently
@@ -49,9 +50,17 @@ def test_bridge_commands(bridge):
 
 
 def test_group_commands(bridge):
+    groups = bridge.get_groups()
+    for group in groups:
+       print(group.id)
+       print(group.data)
     group = Group(bridge, 0)  # group 0 is all lights
     group.set("hue", 0)
     group.set("sat", 255)
+    bridge.get_all_data()
+    group = Group(bridge,"9") # note this is the index, not the name
+    bridge.delete_group(group) # trying to dlete a not-existant group gives an appropriae error
+    bridge.get_all_data()
 
 
 def test_scene_commands(bridge):
