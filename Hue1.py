@@ -250,9 +250,6 @@ class Scene:
         group = Group(self.bridge, 0)  # group 0 is all lights
         group.set("scene", self.id)
 
-    def delete(self):
-        self.bridge.delete_scene(self)
-        # delete this object now?
 
 
 class Group:
