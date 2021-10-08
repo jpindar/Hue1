@@ -88,7 +88,7 @@ def test_scene_commands(bridge):
 def test_light_commands(bridge):
 
     try:
-        lights = bridge.lights()
+        lights = bridge.get_lights()
         for light in lights:  # this won't work if lights is a dict
             print(light.index, light.name)
             light.set("hue", 0000)
@@ -158,7 +158,7 @@ def test_bad_commands():
 
     bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
     try:
-        lights = bridge.lights()
+        lights = bridge.get_lights()
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
@@ -170,7 +170,7 @@ def test_bad_commands():
 
     bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
     try:
-        lights = bridge.lights()
+        lights = bridge.get_lights()
     except HueError as e:
         print("Hue Error type " + str(e.type) + e.description)
     except requests.exceptions.ConnectionError as e:
@@ -203,8 +203,7 @@ def test_light_thats_off():
 def main():
     print("Hue Demo")
     # typical access is like
-    # lights = bridge.lights()
-    # which is the same as bridge.get_lights()
+    # lights = bridge.get_lights()
     # or
     # light = bridge.get_light_by_name(name)
     # (which calls bridge.get_lights())

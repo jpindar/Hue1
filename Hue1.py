@@ -202,9 +202,9 @@ class Bridge:
     def lights(self):
         # if we were going for speed at the expense of possible
         # errors (like if a light was added or removed from the bridge) we could add this:
-        # if self.light_list == {}:
         # note that physically turning a light off does not remove it from the bridge's list
-        self.get_lights()
+        if self.light_list == {}:
+            self.get_lights()
         return self.light_list
 
 
