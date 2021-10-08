@@ -25,10 +25,10 @@ logger.info("Hue1 demo")
 
 
 def test_bridge_commands(bridge):
-    bridge.get_all_data()
-    # bridge.get_lights()
-    # bridge.get_scenes()
-    bridge.get_whitelist()
+    data = bridge.get_all_data()
+    lights = bridge.get_lights()
+    scenes = bridge.get_scenes()
+    whitelist = bridge.get_whitelist()
     bridge.all_on(True)
     bridge.set_all('on', False)
     light = bridge.get_light_by_name("bad name")
@@ -108,14 +108,35 @@ def test_light_commands(bridge):
 
     # transitiontime  uint16
     # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
-    # light.set("transitiontime", 0)
+    light.set("transitiontime", 0)
 
     light.set("on", True)
-    light.set("hue", 0000)
     light.set("sat", 255)
-    # light.set("effect", "colorloop")
-    # light.set("alert","select")    # turns light on and off quickly
-    # light.set("alert", "lselect")
+
+    try:
+        for h in range(0, 65537, 4096):
+            light.set("hue", h)
+    except HueError as e:   # you get an error if you go over 65535, althugh logically it could just wrap
+        print("Hue Error type " + str(e.type) + " " + e.description)
+
+    try:
+        # ct 	uint16 	The Mired Color temperature of the light. 2012 connected lights are capable of 153 (6500K) to 500 (2000K).
+        for t in range(153, 501, 50):
+            light.set("ct",t)
+    except HueError as e:
+        print("Hue Error type " + str(e.type) + " " + e.description)
+
+    light.set("hue",16000)  # yellow
+
+    light.set("sat", 255)
+    light.set("effect", "colorloop")
+    light.set("effect", "none")
+    # note that setting a hue etc. doesn't stop the color loop
+
+    light.set("effect", "none")
+    light.set("alert","select")    # turns light on and off quickly
+    light.set("alert", "lselect")  # turns light on and off quickly several times
+    light.set("alert", "none")
 
     print(light.data['state'])
     # now light.state is no longer accurate
@@ -125,18 +146,6 @@ def test_light_commands(bridge):
 
     # time.sleep(0.5)
     bridge.all_on(False)
-
-    # can access like so
-    # lights = bridge.lights()
-    # light = lights[1]
-    # or we could access a light without calling bridge.lights, like this:
-    # light = Light(bridge, 1)
-    # light.set("on",True)
-    # light.set("sat", 254)
-    # light.set("hue",55000)
-    # I can't think of a good use case for this, though, unless you had a huge number of lights
-    # if you know the index of a light, you can access a light like this:
-    # But remember, the index can change, like if someone unplugged a light.
 
 
 def test_bad_commands():
@@ -193,15 +202,27 @@ def test_light_thats_off():
 
 def main():
     print("Hue Demo")
+    # typical access is like
+    # lights = bridge.lights()
+    # which is the same as bridge.get_lights()
+    # or
+    # light = bridge.get_light_by_name(name)
+    # (which calls bridge.get_lights())
+    #
+    # or we could access a light without calling bridge.lights, like this:
+    # light = Light(bridge, 1)
+    # This might be slightly faster
+    # I can't think of a good use case for this, though, unless you had a huge number of lights
+    # if you know the index of a light, you can access a light like this:
+    # But remember, the index can change, like if someone unplugged a light.
     bridge = Bridge(IP_ADDRESS, USERNAME)
     test_bridge_commands(bridge)
     test_light_commands(bridge)
     test_light_thats_off()
     test_group_commands(bridge)
     test_scene_commands(bridge)
-    # test_bad_commands()
-    bridge.set_all("hue", 40000) # white
-
+    test_bad_commands()
+    bridge.all_on(False)
 
 if __name__ == "__main__":
     main()
