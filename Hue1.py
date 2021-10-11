@@ -18,7 +18,6 @@ some error types
 
 import logging
 import json
-import time
 import requests
 
 ___author___ = "jpindar@jpindar.com"
@@ -30,17 +29,19 @@ ENABLE_LOGGING = True
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     log_filename = 'Hue1.log'
-    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+    logging.basicConfig(filename=log_filename,  filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
 if ENABLE_LOGGING:
     logger.setLevel(logging.INFO)
 
 
 class HueError(Exception):
-    """Exception raised for errors in the response from the bridge
+    """
+       Exception raised for errors in the response from the bridge
        Attributes:
          type -- numeric type of error
          description -- explanation of the error
     """
+
     def __init__(self, type, description):
         self.type = type
         self.description = description
@@ -63,7 +64,7 @@ def request(method, url, route, **kwargs):
         # AFAIK, the list only ever has one element, but we can't be sure of that
         # so instead of stripping the dict out of the list, let's do the opposite
         r = response.json()
-        if isinstance(r,dict):
+        if isinstance(r, dict):
             r = [r]
         return r
     except ConnectionError as e:  # doesn't happen?
@@ -160,11 +161,11 @@ class Bridge:
         except HueError as e:
             logger.error(e.args)
             raise e
-        r = response[0] #note that while the keys in thi look like indexes, they are not necesarily incluive or ordered
+        # note that while the keys in this look like indexes, they are not necessarily inclusive or ordered
+        r = response[0]
         self.group_list = [Group(self, i, r[str(i)]) for i in r.keys()]
         self.group_list = sorted(self.group_list, key=lambda x: x.name)
         return self.group_list
-
 
     def get_scene_by_name(self, desired_name):
         self.get_scenes()
@@ -198,7 +199,6 @@ class Bridge:
             logger.error(e.args)
             raise e
 
-
     def lights(self):
         # if we were going for speed at the expense of possible
         # errors (like if a light was added or removed from the bridge) we could add this:
@@ -207,14 +207,12 @@ class Bridge:
             self.get_lights()
         return self.light_list
 
-
     def get_light_by_name(self, this_name):
         self.light_list = self.get_lights()
         for light in self.light_list:
             if light.name == this_name:
                 return light
         return None
-
 
     def all_on(self, on):
         group = Group(self, 0)  # group 0 is all lights
@@ -232,7 +230,7 @@ class Bridge:
 class Scene:
     ROUTE = 'scenes'
 
-    def __init__(self, bridge, id, data = None):
+    def __init__(self, bridge, id, data=None):
         self.id = id
         self.bridge = bridge
         self.data = {}
@@ -251,7 +249,6 @@ class Scene:
         group.set("scene", self.id)
 
 
-
 class Group:
     """ A group of lights
         Note that Group 0 is all lights
@@ -259,7 +256,7 @@ class Group:
 
     ROUTE = 'groups'
 
-    def __init__(self, bridge, id, data = None):
+    def __init__(self, bridge, id, data=None):
         self.id = id
         self.bridge = bridge
         self.data = {}
@@ -289,7 +286,7 @@ class Group:
 class Light:
     ROUTE = 'lights'
 
-    def __init__(self, bridge, index, data = None):
+    def __init__(self, bridge, index, data=None):
         self.index = int(index)
         self.bridge = bridge
         self.data = {}
@@ -299,7 +296,7 @@ class Light:
             try:
                 self.data = data
                 self.name = self.data['name']
-                self.state = self.data['state'] # creates a reference, not a copy
+                self.state = self.data['state']
             except KeyError as e:
                 raise HueError(0, "Not able to parse light data")
 
@@ -316,9 +313,8 @@ class Light:
             logger.error(e.args)
             raise e
 
-
     def set(self, attr, value):
-        if isinstance(value,str):
+        if isinstance(value, str):
             if value.lower() == "true":
                 value = True
             elif value.lower() == "false":
@@ -326,7 +322,6 @@ class Light:
             elif value.lstrip("-+").isdigit():  # oddly, there is no is_int() function
                 value = int(value)
         self.send(json.dumps({attr: value}))
-
 
     def send(self, msg):
         route = self.ROUTE + "/" + str(self.index) + "/state"

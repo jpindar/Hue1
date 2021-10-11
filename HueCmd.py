@@ -22,16 +22,14 @@ from Hue1 import *
 ___author___ = "jpindar@jpindar.com"
 log_filename = 'HueCmd.log'
 script_name = 'HueCmd.py'
-# It's OK to leave the credentials here for now
-# because my bridge is not accessible from outside my LAN
-#TODO read these from a config file
+# It's OK to leave the credentials here for now because my bridge is not accessible from outside my LAN
+# TODO read these from a config file
 BAD_IP_ADDRESS = "10.0.1.99:80"
 IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
 ENABLE_LOGGING = True
-
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
@@ -117,6 +115,7 @@ def main():
             scene.display()
         else:
             print(script_name + " did not find a scene by that name")
+
 
 if __name__ == "__main__":
     main()

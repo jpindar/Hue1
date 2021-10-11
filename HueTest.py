@@ -1,5 +1,5 @@
 """
-HueTest, a script for exercising the HUe1 module
+HueTest, a script for exercising the Hue1 module
 Author: jpindar@jpindar.com
 
 """
@@ -15,7 +15,6 @@ USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
 ENABLE_LOGGING = True
-
 log_filename = 'Hue1.log'
 logger = logging.getLogger()  # logger with the default name 'root'
 logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
@@ -59,7 +58,7 @@ def test_group_commands(bridge):
     group.set("sat", 255)
     bridge.get_all_data()
     group = Group(bridge,"9") # note this is the index, not the name
-    bridge.delete_group(group) # trying to dlete a not-existant group gives an appropriae error
+    bridge.delete_group(group) # trying to delete a not-existant group gives an appropriate error
     bridge.get_all_data()
 
 
@@ -100,11 +99,6 @@ def test_light_commands(bridge):
         print("Couldn't find a light with that name")
 
     light.set('on', True)
-
-    # this doesn't work, probably because some of the parameters in state are readonly
-    # light.state['on'] = True
-    # light.state['hue'] = 0
-    # light.send()
 
     # transitiontime  uint16
     # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
