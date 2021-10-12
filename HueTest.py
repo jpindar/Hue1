@@ -14,20 +14,24 @@ IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
-ENABLE_LOGGING = True
+enable_logging = True
 log_filename = 'Hue1.log'
 logger = logging.getLogger()  # logger with the default name 'root'
 logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
-if ENABLE_LOGGING:
+if enable_logging:
     logger.setLevel(logging.INFO)
 logger.info("Hue1 demo")
 
 
-def test_bridge_commands(bridge):
+def test_bridge_commands(bridge:Bridge) -> None:
     data = bridge.get_all_data()
+    print(data)
     lights = bridge.get_lights()
+    print(lights)
     scenes = bridge.get_scenes()
+    print(scenes)
     whitelist = bridge.get_whitelist()
+    print(whitelist)
     bridge.all_on(True)
     bridge.set_all('on', False)
     light = bridge.get_light_by_name("bad name")
@@ -36,7 +40,8 @@ def test_bridge_commands(bridge):
     light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
-    light.set('hue', 000)
+    else:
+       light.set('hue', 000)
 
     # this should raise a Hueerror exception since this user doesn't exist
     # in a real application this should probably fail silently
@@ -48,7 +53,7 @@ def test_bridge_commands(bridge):
     bridge.all_on(True)
 
 
-def test_group_commands(bridge):
+def test_group_commands(bridge:Bridge) -> None:
     groups = bridge.get_groups()
     for group in groups:
        print(group.id)
@@ -57,12 +62,13 @@ def test_group_commands(bridge):
     group.set("hue", 0)
     group.set("sat", 255)
     bridge.get_all_data()
-    group = Group(bridge,"9") # note this is the index, not the name
+    # group = Group(bridge,"9") # note this is the index, not the name
+    group = Group(bridge,9) # note this is the index, not the name
     bridge.delete_group(group) # trying to delete a not-existant group gives an appropriate error
     bridge.get_all_data()
 
 
-def test_scene_commands(bridge):
+def test_scene_commands(bridge:Bridge) -> None:
     # bridge.get_scenes()
     # could do for scene in bridge.scene_list, but that assumes bridge is populated
     # maybe bridge *should* be populated in its constructor?
@@ -84,7 +90,7 @@ def test_scene_commands(bridge):
     # scene.delete()  # this could call bridge.delete_scene()
 
 
-def test_light_commands(bridge):
+def test_light_commands(bridge:Bridge) -> None:
 
     try:
         lights = bridge.get_lights()
@@ -97,52 +103,44 @@ def test_light_commands(bridge):
     light = bridge.get_light_by_name("L")
     if light is None:
         print("Couldn't find a light with that name")
+    else:
+        light.set('on', True)
+        # transitiontime  uint16
+        # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
+        light.set("transitiontime", 0)
+        light.set("on", True)
+        light.set("sat", 255)
+        try:
+            for h in range(0, 65537, 4096):
+                light.set("hue", h)
+        except HueError as e:   # you get an error if you go over 65535, althugh logically it could just wrap
+            print("Hue Error type " + str(e.type) + " " + e.description)
 
-    light.set('on', True)
+        try:
+            # ct 	uint16 	The Mired Color temperature of the light. 2012 connected lights are capable of 153 (6500K) to 500 (2000K).
+            for t in range(153, 501, 50):
+                light.set("ct",t)
+        except HueError as e:
+            print("Hue Error type " + str(e.type) + " " + e.description)
 
-    # transitiontime  uint16
-    # This is given as a  multiple  of 100  ms and defaults to 4(400 ms).
-    light.set("transitiontime", 0)
-
-    light.set("on", True)
-    light.set("sat", 255)
-
-    try:
-        for h in range(0, 65537, 4096):
-            light.set("hue", h)
-    except HueError as e:   # you get an error if you go over 65535, althugh logically it could just wrap
-        print("Hue Error type " + str(e.type) + " " + e.description)
-
-    try:
-        # ct 	uint16 	The Mired Color temperature of the light. 2012 connected lights are capable of 153 (6500K) to 500 (2000K).
-        for t in range(153, 501, 50):
-            light.set("ct",t)
-    except HueError as e:
-        print("Hue Error type " + str(e.type) + " " + e.description)
-
-    light.set("hue",16000)  # yellow
-
-    light.set("sat", 255)
-    light.set("effect", "colorloop")
-    light.set("effect", "none")
-    # note that setting a hue etc. doesn't stop the color loop
-
-    light.set("effect", "none")
-    light.set("alert","select")    # turns light on and off quickly
-    light.set("alert", "lselect")  # turns light on and off quickly several times
-    light.set("alert", "none")
-
-    print(light.data['state'])
-    # now light.state is no longer accurate
-    light.get_data()
-    print(light.data['state'])
-    # now it is accurate
-
-    # time.sleep(0.5)
-    bridge.all_on(False)
+        light.set("hue",16000)  # yellow
+        light.set("sat", 255)
+        light.set("effect", "colorloop")
+        light.set("effect", "none")
+        # note that setting a hue etc. doesn't stop the color loop
+        light.set("effect", "none")
+        light.set("alert","select")    # turns light on and off quickly
+        light.set("alert", "lselect")  # turns light on and off quickly several times
+        light.set("alert", "none")
+        print(light.data['state'])
+        # now light.state is no longer accurate
+        light.get_data()
+        print(light.data['state'])
+        # now it is accurate
+        bridge.all_on(False)
 
 
-def test_bad_commands():
+def test_bad_commands() -> None:
     bridge = Bridge(IP_ADDRESS, USERNAME)
     try:
         # this should cause an error response from the bridge
@@ -165,14 +163,12 @@ def test_bad_commands():
     bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
     try:
         lights = bridge.get_lights()
+        print(lights)
     except HueError as e:
         print("Hue Error type " + str(e.type) + e.description)
-    except requests.exceptions.ConnectionError as e:
-        logger.error(e.args)
-        print(e.args)
 
 
-def test_light_thats_off():
+def test_light_thats_off() -> None:
     """
     if a light is turned off, either physically or virtually, you can set it virtually on or off,
     but trying to set its hue etc. returns an error in the response
@@ -194,7 +190,7 @@ def test_light_thats_off():
     light.set("hue", 400)
 
 
-def main():
+def main() -> None:
     print("Hue Demo")
     # typical access is like
     # lights = bridge.get_lights()

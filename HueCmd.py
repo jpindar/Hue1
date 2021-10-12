@@ -29,16 +29,16 @@ IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
-ENABLE_LOGGING = True
+enable_logging = True
 logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
-if ENABLE_LOGGING:
+if enable_logging:
     logger.setLevel(logging.INFO)
 logger.info("HueCmd")
 
 
-def create_parser():
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='controls Hue lights')
     parser.add_argument("-lights", "--lights", help="list lights", action="store_true")  # boolean flag
     parser.add_argument("-off", "--off", help="all lights off", action="store_true")  # boolean flag
@@ -48,7 +48,7 @@ def create_parser():
     return parser
 
 
-def test_parser(parser):
+def test_parser(parser: argparse.ArgumentParser) -> argparse.Namespace:
     # args = parser.parse_args()  # no output, which I think is correct
     # args = parser.parse_args(["--lights"])   # works
     # args = parser.parse_args(["--light", "badname", '{"on": true, "bri":100}'])  # works as expected
@@ -61,13 +61,13 @@ def test_parser(parser):
     # args = parser.parse_args(["-light", "U", '{"on": true}'])       # this works from here, however...
     # args = parser.parse_args(["-light", "U", '{\"on\": false}'])  # you need to escape the " when doing this on the command line
     # args = parser.parse_args(["-light", "U", "hue", "9000"]) # works
-    args = parser.parse_args(["-light", "U", "on", "false"])  # works
+    args: argparse.Namespace = parser.parse_args(["-light", "U", "on", "false"])  # works
     return args
 
 
-def main():
+def main() -> None:
     parser = create_parser()
-    TEST_PARSER = True
+    TEST_PARSER = False
     if TEST_PARSER:
         # INJECTING ARGS FOR TESTING
         args = test_parser(parser)
