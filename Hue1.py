@@ -24,7 +24,7 @@ Response = Dict[str, Any]
 
 ___author___ = "jpindar@jpindar.com"
 
-# If a light is physically on and off, you can turn it virtually on and off. But you can't set it's hue etc.
+# If a light is physically off, you can turn it virtually on and off. But you can't set it's hue etc.
 LIGHT_IS_TURNED_OFF = 201
 
 ENABLE_LOGGING = True
@@ -68,8 +68,10 @@ def request(method: str, url: str, route: str, **kwargs: Any) -> List[Response]:
         # so instead of stripping the dict out of the list, let's do the opposite
         r: Union[Response, List[Response]] = response.json()
         if isinstance(r, dict):
-            r = [r]
-        return r
+            return [r]
+        else:
+            return r
+
     except ConnectionError as e:  # doesn't happen?
         logger.error(e.args)
         raise e
@@ -141,7 +143,7 @@ class Bridge:
             logger.error("Hue Error " + str(e.args))
             raise e
         r = response[0]
-        self.light_list = [Light(self, i, r[str(i)]) for i in r.keys()]
+        self.light_list = [Light(self, int(i), r[str(i)]) for i in r.keys()]
         self.light_list = sorted(self.light_list, key=lambda x: x.index)
         return self.light_list
 
@@ -166,7 +168,7 @@ class Bridge:
             raise e
         # note that while the keys in this look like indexes, they are not necessarily inclusive or ordered
         r = response[0]
-        self.group_list = [Group(self, i, r[str(i)]) for i in r.keys()]
+        self.group_list = [Group(self, int(i), r[str(i)]) for i in r.keys()]
         self.group_list = sorted(self.group_list, key=lambda x: x.name)
         return self.group_list
 
@@ -203,8 +205,7 @@ class Bridge:
             raise e
 
     def lights(self) -> List['Light']:
-        # if we were going for speed at the expense of possible
-        # errors (like if a light was added or removed from the bridge) we could add this:
+        # use this instead of get_lights() if you're going for speed, and willing to assume the light list doesn't change
         # note that physically turning a light off does not remove it from the bridge's list
         if self.light_list == []:
             self.get_lights()
@@ -246,7 +247,7 @@ class Scene:
                 self.name = self.data['name']
                 self.lights = self.data['lights']
             except KeyError as e:
-                raise HueError(0, "Not able to parse scene data")
+                raise HueError(0, "Not able to parse scene data" + str(e.args))
 
     def display(self) -> None:
         group: Group = Group(self.bridge, 0)  # group 0 is all lights
@@ -272,7 +273,7 @@ class Group:
                 self.name = self.data['name']
                 self.lights = self.data['lights']
             except KeyError as e:
-                raise HueError(0, "Not able to parse group data")
+                raise HueError(0, "Not able to parse group data" + str(e.args))
 
     def set(self, attr: str, value: Any) -> None:
         route = self.ROUTE + "/" + str(self.id) + "/action"
@@ -302,7 +303,7 @@ class Light:
                 self.name = self.data['name']
                 self.state = self.data['state']
             except KeyError as e:
-                raise HueError(0, "Not able to parse light data")
+                raise HueError(0, "Not able to parse light data" + str(e.args))
 
     def get_data(self) -> Response:
         route = self.ROUTE + "/" + str(self.index)
@@ -343,7 +344,7 @@ class Light:
                 raise e
 
 
-def _main():
+def _main() -> None:
 
     print("Hue Module")
     logger.info("Hue1 module")
