@@ -14,13 +14,13 @@ IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
-enable_logging = True
-log_filename = 'Hue1.log'
-logger = logging.getLogger()  # logger with the default name 'root'
-logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+enable_logging = False
+log_filename = 'HueTest.log'
+logger = logging.getLogger("HueTest")
 if enable_logging:
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
     logger.setLevel(logging.INFO)
-logger.info("Hue1 demo")
+logger.info("HueTest demo starting")
 
 
 def test_bridge_commands(bridge:Bridge) -> None:

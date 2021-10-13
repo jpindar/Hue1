@@ -23,18 +23,17 @@ from typing import List, Dict, Optional, Any, Union
 Response = Dict[str, Any]
 
 ___author___ = "jpindar@jpindar.com"
-
 # If a light is physically off, you can turn it virtually on and off. But you can't set it's hue etc.
 LIGHT_IS_TURNED_OFF = 201
 
-ENABLE_LOGGING = True
-
-logger = logging.getLogger(__name__)
-if __name__ == "__main__":
-    log_filename = 'Hue1.log'
-    logging.basicConfig(filename=log_filename,  filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
-if ENABLE_LOGGING:
+log_filename = "Hue1.log"
+enable_logging = False
+logger = logging.getLogger("Hue1")
+if enable_logging:
+    if __name__ == "__main__":
+        logging.basicConfig(filename=log_filename,  filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
     logger.setLevel(logging.INFO)
+logger.info("Hue1.py starting")
 
 
 class HueError(Exception):

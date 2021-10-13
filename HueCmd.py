@@ -20,7 +20,6 @@ import argparse
 from Hue1 import *
 
 ___author___ = "jpindar@jpindar.com"
-log_filename = 'HueCmd.log'
 script_name = 'HueCmd.py'
 # It's OK to leave the credentials here for now because my bridge is not accessible from outside my LAN
 # TODO read these from a config file
@@ -29,13 +28,13 @@ IP_ADDRESS = "10.0.1.3:80"
 USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
 
-enable_logging = True
-logger = logging.getLogger(__name__)
-if __name__ == "__main__":
-    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
+enable_logging = False
+log_filename = 'HueCmd.log'
+logger = logging.getLogger("HueCmd")
 if enable_logging:
+    logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
     logger.setLevel(logging.INFO)
-logger.info("HueCmd")
+logger.info("HueCmd  starting")
 
 
 def create_parser() -> argparse.ArgumentParser:
