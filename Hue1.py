@@ -95,7 +95,7 @@ class Bridge:
         self.url: str = "http://" + ip_address + "/api/" + username
         self.data: Dict[str, Any] = {}
 
-    def get_all_data(self) -> Dict[str, Any]:
+    def get_all_data(self) -> Response:
         """ Get all data from the bridge. """
         try:
             response: List[Response] = request("GET", self.url, '')
@@ -106,7 +106,7 @@ class Bridge:
             raise e
         return self.data
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> Response:
         try:
             response: List[Response] = request("GET", self.url, "config")
             check_response_for_error(response)
@@ -115,10 +115,10 @@ class Bridge:
             raise e
         return response[0]
 
-    def get_whitelist(self) -> Dict[str, Any]:
+    def get_whitelist(self) -> Response:
         """ Get the bridge's whitelist of usernames """
-        config: Dict[str, Any] = self.get_config()
-        whitelist: Dict[str, Any] = config['whitelist']
+        config: Response = self.get_config()
+        whitelist: Response = config['whitelist']
         return whitelist
 
     def delete_user(self, id: str) -> None:
@@ -237,7 +237,7 @@ class Scene:
     def __init__(self, bridge: Bridge, id: str, data: Optional[Dict[str, Any]] = None) -> None:
         self.id: str = id
         self.bridge: Bridge = bridge
-        self.data: Dict[str, Any] = {}
+        self.data: Response = {}
         self.name: str = ""
         self.lights: List[str] = []
         if data is not None:
@@ -293,9 +293,9 @@ class Light:
     def __init__(self, bridge: Bridge, index: int, data: Optional[Dict[str, Any]] = None) -> None:
         self.index: int = int(index)
         self.bridge: Bridge = bridge
-        self.data: Dict[str, Any] = {}
+        self.data: Response = {}
         self.name: str = ""
-        self.state: Dict[str, Any] = {}
+        self.state: Response = {}
         if data is not None:
             try:
                 self.data = data
@@ -359,4 +359,3 @@ def _main() -> None:
 
 if __name__ == "__main__":
     _main()
-
