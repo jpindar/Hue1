@@ -21,12 +21,11 @@ from Hue1 import *
 
 ___author___ = "jpindar@jpindar.com"
 script_name = 'HueCmd.py'
-# It's OK to leave the credentials here for now because my bridge is not accessible from outside my LAN
-# TODO read these from a config file
+ip_address: str = ""
+username: str = ""
 BAD_IP_ADDRESS = "10.0.1.99:80"
-IP_ADDRESS = "10.0.1.3:80"
-USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
+config_filename = ".hueconfig"
 
 enable_logging = False
 log_filename = 'HueCmd.log'
@@ -35,6 +34,17 @@ if enable_logging:
     logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
     logger.setLevel(logging.INFO)
 logger.info("HueCmd  starting")
+
+
+def read_config_file() -> None:
+    global ip_address
+    global username
+    configFile = open(config_filename, 'r')
+    with configFile as f:
+        ip_address = f.readline()
+        username = f.readline()
+        ip_address = ip_address.strip("\r\n\'\"")
+        username = username.strip("\r\n\'\"")
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -74,7 +84,8 @@ def main() -> None:
         # NORMAL PARSING
         args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
-    bridge = Bridge(IP_ADDRESS, USERNAME)
+    read_config_file()
+    bridge = Bridge(ip_address, username)
 
     if args.light: # OK
         # command format is  {'parameter':value,'parameter':value}

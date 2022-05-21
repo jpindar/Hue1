@@ -6,13 +6,12 @@ Author: jpindar@jpindar.com
 import logging
 from Hue1 import *
 
-# It's OK to leave the credentials here for now
-# because my bridge is not accessible from outside my LAN
-#TODO read these from a config file
+
+ip_address: str = ""
+username: str = ""
 BAD_IP_ADDRESS = "10.0.1.99:80"
-IP_ADDRESS = "10.0.1.3:80"
-USERNAME = "vXBlVENNfyKjfF3s"
 BAD_USERNAME = "invalid_username"
+config_filename = ".hueconfig"
 
 enable_logging = False
 log_filename = 'HueTest.log'
@@ -21,6 +20,18 @@ if enable_logging:
     logging.basicConfig(filename=log_filename, filemode='w', format='%(levelname)-8s:%(asctime)s %(name)s: %(message)s')
     logger.setLevel(logging.INFO)
 logger.info("HueTest demo starting")
+
+
+def read_config_file() -> None:
+    global ip_address
+    global username
+    configFile = open(config_filename, 'r')
+    with configFile as f:
+        ip_address = f.readline()
+        username = f.readline()
+        ip_address = ip_address.strip("\r\n\'\"")
+        username = username.strip("\r\n\'\"")
+
 
 
 def test_bridge_commands(bridge:Bridge) -> None:
@@ -141,26 +152,26 @@ def test_light_commands(bridge:Bridge) -> None:
 
 
 def test_bad_commands() -> None:
-    bridge = Bridge(IP_ADDRESS, USERNAME)
+    bridge = Bridge(ip_address, username)
     try:
         # this should cause an error response from the bridge
         bridge.set_all("hue", "000")
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
-    bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
+    bridge = Bridge(ip_address, BAD_USERNAME)
     try:
         lights = bridge.get_lights()
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
-    bridge = Bridge(IP_ADDRESS, BAD_USERNAME)
+    bridge = Bridge(ip_address, BAD_USERNAME)
     try:
         bridge.get_all_data()
     except HueError as e:
         print("Hue Error type " + str(e.type) + " " + e.description)
 
-    bridge = Bridge(BAD_IP_ADDRESS, USERNAME)
+    bridge = Bridge(BAD_IP_ADDRESS, username)
     try:
         lights = bridge.get_lights()
         print(lights)
@@ -173,7 +184,7 @@ def test_light_thats_off() -> None:
     if a light is turned off, either physically or virtually, you can set it virtually on or off,
     but trying to set its hue etc. returns an error in the response
     """
-    bridge = Bridge(IP_ADDRESS, USERNAME)
+    bridge = Bridge(ip_address, username)
 
     light = bridge.get_light_by_name("badName")
     if light is None:
@@ -204,7 +215,8 @@ def main() -> None:
     # I can't think of a good use case for this, though, unless you had a huge number of lights
     # if you know the index of a light, you can access a light like this:
     # But remember, the index can change, like if someone unplugged a light.
-    bridge = Bridge(IP_ADDRESS, USERNAME)
+    read_config_file()
+    bridge = Bridge(ip_address, username)
     test_bridge_commands(bridge)
     test_light_commands(bridge)
     test_light_thats_off()
