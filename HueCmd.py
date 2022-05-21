@@ -64,9 +64,9 @@ def test_parser(parser: argparse.ArgumentParser) -> argparse.Namespace:
     # args = parser.parse_args(["--light", "U", '{"on": true, "bri":100}'])  # works
     # args = parser.parse_args(["--scenes"])  # works, could use some output formatting #TODO
     # args = parser.parse_args(["-scene", 'ac637e2f0-on-0'])  # works
-    # args = parser.parse_args(["-scene", 'bad id'])  # works as expected
+    # args = parser.parse_args(["-scene", 'bad id'])  # fails as expected
     # args = parser.parse_args(["-off"])  # works
-    # args = parser.parse_args(["-light", "U"])  # works as expected
+    # args = parser.parse_args(["-light", "U"])  # fails as expected
     # args = parser.parse_args(["-light", "U", '{"on": true}'])       # this works from here, however...
     # args = parser.parse_args(["-light", "U", '{\"on\": false}'])  # you need to escape the " when doing this on the command line
     # args = parser.parse_args(["-light", "U", "hue", "9000"]) # works
@@ -89,16 +89,16 @@ def main() -> None:
 
     if args.light: # OK
         # command format is  {'parameter':value,'parameter':value}
-        # any quotes within a command line argument must be escaped
-        #light = bridge.get_light_by_index(int(args.light[0]))
+        # args.light[0] is the lights name, args.light[1] is the dict of settings
         light = bridge.get_light_by_name(args.light[0])
         if light is None:
             print(script_name + " did not find any light by that name")
         else:
-            if len(args.light) == 2:
+            n = len(args.light)
+            if n == 2: # 0 and 1
                 print(script_name + ' sending', args.light[1], 'to', light.data['name'])
                 light.send(args.light[1])
-            else:
+            elif n == 3:
                 light.set(args.light[1], args.light[2])
 
     if args.lights:  # OK
